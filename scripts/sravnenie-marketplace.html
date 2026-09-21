@@ -83,7 +83,7 @@
 
   <h1 class="page-title">Сравнение цен на маркетплейсах</h1>
   <p class="page-lead">
-    Загрузи Excel с двумя списками товаров — скрипт сопоставит позиции
+    Загрузите Excel с двумя списками товаров — скрипт сопоставит позиции
     по названиям и покажет разницу в ценах. Работает офлайн.
   </p>
 
@@ -92,16 +92,16 @@
     Данные не отправляются на сервер.
   </div>
 
-  <div class="step">1. Загрузи файл</div>
+  <div class="step">1. Загрузите файл</div>
   <div class="drop" id="drop">
     <div id="dropText">
-      📁 Перетащи сюда файл <b>.xlsx</b> или нажми для выбора
+      📁 Перетащите сюда файл <b>.xlsx</b> или нажмите для выбора
       <small>Поддерживается первый лист книги</small>
     </div>
     <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
   </div>
 
-  <div class="step">2. Настрой колонки</div>
+  <div class="step">2. Настройте колонки</div>
   <div class="settings">
     <h4>Буквы колонок в Excel (A, B, … AA, AB)</h4>
     <div class="settings-grid">
@@ -114,11 +114,11 @@
         <input type="text" id="colB" value="U" maxlength="3">
       </div>
       <div class="field">
-        <label>Цена A (если есть)</label>
+        <label>Цена A (опционально)</label>
         <input type="text" id="colPriceA" value="C" maxlength="3">
       </div>
       <div class="field">
-        <label>Цена B (если есть)</label>
+        <label>Цена B (опционально)</label>
         <input type="text" id="colPriceB" value="V" maxlength="3">
       </div>
       <div class="field">
@@ -127,8 +127,8 @@
       </div>
     </div>
     <div class="hint">
-      Подсказка: колонки смотри в Excel над таблицей.
-      Оставь цену пустой, если её нет.
+      Подсказка: колонки смотрите в Excel над таблицей.
+      Оставьте цену пустой, если её нет.
     </div>
   </div>
 
@@ -310,7 +310,7 @@
     [colAEl, colBEl, priceAEl, priceBEl, thrEl].forEach(validateField);
 
     if (colAEl.classList.contains('error') || colBEl.classList.contains('error')) {
-      log('❌ Проверь буквы колонок A и B.', true);
+      log('❌ Проверьте буквы колонок A и B.', true);
       return;
     }
 

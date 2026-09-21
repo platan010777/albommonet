@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Объединение файлов — ALBOMMONET.RU</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .warn { background: #e8f9ee; border-left: 4px solid #2ecc71; padding: 12px 16px;
+          border-radius: 8px; font-size: 14px; margin-bottom: 24px; }
+  .step { font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+  .drop { border: 2px dashed #c5c5c5; border-radius: 12px; padding: 36px 20px;
+          text-align: center; cursor: pointer; transition: .15s; background: #fff; margin-bottom: 16px; }
+  .drop:hover, .drop.hover { border-color: var(--primary); background: #f5f9ff; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop small { display: block; color: #999; margin-top: 8px; font-size: 12px; }
+  .settings { background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+              padding: 20px; margin-bottom: 20px; }
+  .check { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; cursor: pointer; }
+  .check input { width: 18px; height: 18px; }
+  .file-list { margin-top: 16px; font-size: 13px; }
+  .file-list li { padding: 6px 0; border-bottom: 1px dashed #eee; list-style: none; }
+  #log { margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+         border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+         white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+         max-height: 300px; overflow-y: auto; display: none; }
+  #log.active { display: block; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger"><span></span><span></span><span></span></button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./index.html" class="active">Сравнения</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <h1 class="page-title">🔗 Объединение файлов</h1>
+  <p class="page-lead">
+    Загрузи несколько Excel-файлов одинаковой структуры —
+    получи один файл со всеми строками.
+  </p>
+
+  <div class="warn">🔒 Файлы обрабатываются в браузере. Ничего не отправляется на сервер.</div>
+
+  <div class="step">1. Выбери файлы (можно сразу много)</div>
+  <div class="drop" id="drop">
+    <div id="dropText">📁 Перетащи .xlsx (несколько) или нажми
+      <small>Обрабатывается первый лист каждого файла</small></div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" multiple hidden>
+  </div>
+  <ul class="file-list" id="fileList"></ul>
+
+  <div class="step">2. Настройки</div>
+  <div class="settings">
+    <label class="check"><input type="checkbox" id="optHeader" checked>
+      Первая строка — заголовок (не дублировать в каждом файле)</label>
+    <label class="check"><input type="checkbox" id="optSource" checked>
+      Добавить колонку «Файл-источник»</label>
+    <label class="check"><input type="checkbox" id="optSheet" checked>
+      Добавить колонку «Лист-источник»</label>
+  </div>
+
+  <button id="runBtn" class="btn" disabled>▶ Объединить и скачать</button>
+  <div id="log"></div>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const files = []; // {file, workbook}
+
+  function log(msg, clear) {
+    const el = $('log');
+    if (clear) el.textContent = '';
+    el.textContent += msg + '\n';
+    el.classList.add('active');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function renderFileList() {
+    const ul = $('fileList');
+    ul.innerHTML = files.map((f, i) =>
+      '<li>' + (i+1) + '. ' + f.file.name +
+      ' <small style="color:#999">(' + f.workbook.SheetNames.length + ' лист.)</small></li>'
+    ).join('');
+    $('runBtn').disabled = files.length < 2;
+  }
+
+  $('drop').onclick = () => $('fileInput').click();
+  $('fileInput').onchange = e => handleFiles(e.target.files);
+  ['dragover','dragleave','drop'].forEach(ev => {
+    $('drop').addEventListener(ev, e => {
+      e.preventDefault();
+      if (ev === 'dragover') $('drop').classList.add('hover');
+      if (ev === 'dragleave') $('drop').classList.remove('hover');
+      if (ev === 'drop') {
+        $('drop').classList.remove('hover');
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+  });
+
+  function handleFiles(fileList) {
+    files.length = 0;
+    $('log').textContent = '';
+    const arr = Array.from(fileList);
+    let processed = 0;
+
+    arr.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+          files.push({ file, workbook: wb });
+        } catch (err) {
+          log('❌ ' + file.name + ': ' + err.message);
+        }
+        processed++;
+        if (processed === arr.length) {
+          $('drop').classList.add('done');
+          $('dropText').innerHTML = '✅ Загружено файлов: <b>' + files.length + '</b>';
+          renderFileList();
+          log('Загружено: ' + files.length + ' файл(ов)', true);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  $('runBtn').onclick = () => {
+    if (files.length < 2) return;
+    log('=== Объединение ===', true);
+
+    const hasHeader = $('optHeader').checked;
+    const addSource = $('optSource').checked;
+    const addSheet  = $('optSheet').checked;
+
+    let allRows = [];
+    let headerRow = null;
+
+    files.forEach(f => {
+      f.workbook.SheetNames.forEach(sheetName => {
+        const sheet = f.workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+        if (!rows.length) return;
+
+        let body;
+        if (hasHeader) {
+          if (!headerRow) headerRow = rows[0].slice();
+          body = rows.slice(1);
+        } else {
+          body = rows;
+        }
+
+        // добавляем колонки-источники
+        const extraCols = [];
+        if (addSource) extraCols.push(f.file.name);
+        if (addSheet)  extraCols.push(sheetName);
+
+        const withMeta = body.map(row =>
+          extraCols.length ? [...extraCols, ...row] : row
+        );
+
+        allRows.push(...withMeta);
+        log('  ' + f.file.name + ' / ' + sheetName + ': ' + body.length + ' строк');
+      });
+    });
+
+    // финальная шапка
+    let header = [];
+    if (hasHeader && headerRow) {
+      header = headerRow.slice();
+    } else {
+      // генерируем A, B, C…
+      const maxCols = Math.max(...allRows.map(r => r.length), 0);
+      header = Array.from({length: maxCols}, (_, i) => 'Колонка ' + (i + 1));
+    }
+
+    if (addSource || addSheet) {
+      const extra = [];
+      if (addSource) extra.push('Файл-источник');
+      if (addSheet)  extra.push('Лист-источник');
+      header = [...extra, ...header];
+    }
+
+    const result = [header, ...allRows];
+    log('Итого строк: ' + allRows.length);
+
+    const ws = XLSX.utils.aoa_to_sheet(result);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Объединено');
+    XLSX.writeFile(wb, 'объединено.xlsx');
+    log('✅ Скачан: объединено.xlsx');
+  };
+
+})();
+</script>
+</body>
+</html>
