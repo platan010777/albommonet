@@ -5,15 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Продажи — ALBOMMONET.RU</title>
 <link rel="stylesheet" href="../style.css">
+<style>
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .tool-card {
+    display: flex; flex-direction: column;
+    text-decoration: none; color: inherit;
+  }
+  .tool-card h3 { margin-bottom: 10px; font-size: 17px; }
+  .tool-card p { font-size: 14px; color: var(--text-muted); flex: 1; margin-bottom: 14px; }
+  .tag {
+    display: inline-block; font-size: 11px; padding: 3px 8px;
+    background: #eef4ff; color: var(--primary); border-radius: 6px;
+    align-self: flex-start; font-weight: 500;
+  }
+</style>
 </head>
 <body>
 
 <header class="site-header">
   <div class="site-header-inner">
     <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
-    <button class="burger" aria-label="Меню">
-      <span></span><span></span><span></span>
-    </button>
+    <button class="burger"><span></span><span></span><span></span></button>
     <nav class="main-nav">
       <a href="./sales.html" class="active">Продажи</a>
       <a href="../scripts/index.html">Сравнения</a>
@@ -24,14 +47,42 @@
 </header>
 
 <main class="site-main">
+
   <h1 class="page-title">Продажи</h1>
-  <p class="page-lead">Инструменты для повышения продаж.
+  <p class="page-lead">
+    Инструменты для расчёта прибыли, планирования цен и ведения продаж.
   </p>
 
-  <div class="card">
-    <h3>Актуальные скрипты</h3>
-    <p class="text-muted mb-0">Набор будет постепенно расширяться.</p>
+  <h2 class="section-title">Инструменты</h2>
+
+  <div class="grid">
+
+    <a class="card tool-card" href="../scripts/kalkulyator-marzhi.html">
+      <h3>💰 Калькулятор маржи</h3>
+      <p>Прибыль по себестоимости с учётом комиссии маркетплейса, налога и доставки. Один товар или пакетно из Excel.</p>
+      <span class="tag">Инструмент</span>
+    </a>
+
   </div>
+
+  <h2 class="section-title">Скоро в разделе</h2>
+
+  <div class="grid">
+
+    <div class="card tool-card" style="opacity:0.65; cursor:default;">
+      <h3>📋 Прайс-лист</h3>
+      <p>Актуальные цены на альбомы. Раздел наполняется.</p>
+      <span class="tag">В работе</span>
+    </div>
+
+    <div class="card tool-card" style="opacity:0.65; cursor:default;">
+      <h3>📈 Статистика продаж</h3>
+      <p>Сводка заказов и выручки по периодам.</p>
+      <span class="tag">В работе</span>
+    </div>
+
+  </div>
+
 </main>
 
 <footer class="site-footer">

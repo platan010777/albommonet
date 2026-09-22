@@ -1,8 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Прочее — ALBOMMONET.RU</title>
-<a href="./other.html" class="active">Прочее</a>
-<h1 class="page-title">Прочее</h1>
-<p class="page-lead">Дополнительные разделы и материалы.</p>
-<div class="card">
-  <h3>Что здесь будет</h3>
-  <p class="text-muted mb-0">Раздел наполняется.</p>
-</div>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .tool-card {
+    display: flex; flex-direction: column;
+    text-decoration: none; color: inherit;
+  }
+  .tool-card h3 { margin-bottom: 10px; font-size: 17px; }
+  .tool-card p { font-size: 14px; color: var(--text-muted); flex: 1; margin-bottom: 14px; }
+  .tag {
+    display: inline-block; font-size: 11px; padding: 3px 8px;
+    background: #eef4ff; color: var(--primary); border-radius: 6px;
+    align-self: flex-start; font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger"><span></span><span></span><span></span></button>
+    <nav class="main-nav">
+      <a href="./sales.html">Продажи</a>
+      <a href="../scripts/index.html">Сравнения</a>
+      <a href="./delivery.html">Доставка</a>
+      <a href="./other.html" class="active">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <h1 class="page-title">Прочее</h1>
+  <p class="page-lead">
+    Инструменты для работы с таблицами: очистка, объединение, поиск дублей,
+    конвертация и разделение файлов.
+  </p>
+
+  <h2 class="section-title">Работа с Excel</h2>
+
+  <div class="grid">
+
+    <a class="card tool-card" href="../scripts/chistka-excel.html">
+      <h3>🧹 Чистка Excel</h3>
+      <p>Удаление пустых строк, дублей, лишних пробелов. Приведение таблицы в порядок за один клик.</p>
+      <span class="tag">Очистка</span>
+    </a>
+
+    <a class="card tool-card" href="../scripts/obieedinenie-faylov.html">
+      <h3>🔗 Объединение файлов</h3>
+      <p>Соберите несколько Excel-файлов в один. Все листы одного формата — в одну таблицу.</p>
+      <span class="tag">Объединение</span>
+    </a>
+
+    <a class="card tool-card" href="../scripts/poisk-dubley.html">
+      <h3>🔍 Поиск дублей</h3>
+      <p>Найдите повторяющиеся позиции по названию, артикулу или любой колонке.</p>
+      <span class="tag">Дубли</span>
+    </a>
+
+    <a class="card tool-card" href="../scripts/konverter-xlsx-csv.html">
+      <h3>🔄 Конвертер XLSX ↔ CSV</h3>
+      <p>Переведите Excel в CSV и обратно. Выбор листа, разделителя, кодировки.</p>
+      <span class="tag">Конвертация</span>
+    </a>
+
+    <a class="card tool-card" href="../scripts/razdelenie-fayla.html">
+      <h3>✂️ Разделение файла</h3>
+      <p>Разбейте одну таблицу на несколько файлов по значениям колонки (город, менеджер, категория).</p>
+      <span class="tag">Разделение</span>
+    </a>
+
+  </div>
+
+  <h2 class="section-title">Разное</h2>
+
+  <div class="grid">
+
+    <div class="card tool-card" style="opacity:0.65; cursor:default;">
+      <h3>🖼️ Сравнение фото по хешу</h3>
+      <p>Найти одинаковые изображения в папке. Раздел наполняется.</p>
+      <span class="tag">В работе</span>
+    </div>
+
+    <div class="card tool-card" style="opacity:0.65; cursor:default;">
+      <h3>📧 Генератор писем</h3>
+      <p>Персональные письма по шаблону и таблице. Раздел наполняется.</p>
+      <span class="tag">В работе</span>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="../script.js"></script>
+</body>
+</html>
