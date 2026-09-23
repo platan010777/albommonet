@@ -3,26 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Готовые скрипты — ALBOMMONET.RU</title>
+<title>Сравнения и инструменты — ALBOMMONET.RU</title>
 <link rel="stylesheet" href="../style.css">
+<link rel="icon" href="data:,">
 <style>
   .badge {
     display: inline-block; font-size: 12px; padding: 4px 10px;
     background: #e8f9ee; color: #1e874b; border-radius: 8px;
     margin-bottom: 20px;
   }
+
+  .catalog-section { margin-bottom: 44px; }
+  .catalog-section-title {
+    font-size: 20px; font-weight: 700; margin: 0 0 8px;
+    display: flex; align-items: center; gap: 12px; color: #1a1a1a;
+  }
+  .catalog-section-title .icon { font-size: 22px; line-height: 1; }
+  .catalog-section-desc {
+    font-size: 14px; color: var(--text-muted);
+    margin-bottom: 20px; max-width: 720px;
+  }
+
   .script-card {
     display: flex; flex-direction: column;
     text-decoration: none; color: inherit;
+    position: relative; overflow: hidden;
   }
   .script-card h3 { margin-bottom: 10px; font-size: 17px; }
   .script-card p {
-    font-size: 14px; color: var(--text-muted); flex: 1; margin-bottom: 14px;
+    font-size: 14px; color: var(--text-muted);
+    flex: 1; margin-bottom: 14px;
   }
   .tag {
     display: inline-block; font-size: 11px; padding: 3px 8px;
     background: #eef4ff; color: var(--primary); border-radius: 6px;
     align-self: flex-start; font-weight: 500;
+  }
+
+  /* Мои магазины */
+  .my-shop .card,
+  .my-shop .script-card { border-top: 4px solid #FFC700; }
+  .shop-logo {
+    display: inline-flex; width: 44px; height: 44px;
+    background: #FFC700; color: #1a1a1a; border-radius: 10px;
+    align-items: center; justify-content: center;
+    font-weight: 900; font-size: 26px; line-height: 1;
+    margin-bottom: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    box-shadow: 0 2px 8px rgba(255,199,0,0.35);
+  }
+  .my-shop .tag { background: #fff8e0; color: #8a6d00; }
+  .my-shop .script-card h3 {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .my-shop .script-card h3 .letter {
+    display: inline-flex; width: 28px; height: 28px;
+    background: #FFC700; color: #1a1a1a; border-radius: 7px;
+    align-items: center; justify-content: center;
+    font-weight: 900; font-size: 17px; flex-shrink: 0;
+  }
+
+  /* Заглушка магазина */
+  .my-shop .script-card.albomov {
+    border-top: 4px solid #d4a017;
+    opacity: 0.75;
+    cursor: default;
+    pointer-events: none;
+  }
+  .my-shop .script-card.albomov:hover {
+    transform: none; box-shadow: none;
+  }
+  .my-shop .script-card.albomov h3 .letter {
+    background: #d4a017; color: #ffffff;
+  }
+  .my-shop .script-card.albomov .tag {
+    background: #fff4d9; color: #8a6d00;
+  }
+
+  /* Маркетплейсы */
+  .mp-ozon { border-top: 4px solid #005bff; }
+  .mp-wb   { border-top: 4px solid #cb11ab; }
+  .mp-ya   { border-top: 4px solid #fc3f1d; }
+  .mp-ozon h3,
+  .mp-wb h3,
+  .mp-ya h3 { display: flex; align-items: center; gap: 10px; }
+
+  .mp-letter {
+    display: inline-flex; width: 28px; height: 28px;
+    align-items: center; justify-content: center;
+    font-weight: 900; font-size: 16px; flex-shrink: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .mp-letter-ozon {
+    background: #005bff; color: #ffffff; border-radius: 7px;
+  }
+  .mp-letter-wb {
+    background: #cb11ab; color: #ffffff; border-radius: 7px;
+  }
+  .mp-letter-ya {
+    background: #FFC700; color: #fc3f1d; border-radius: 50%;
   }
 </style>
 </head>
@@ -47,36 +127,84 @@
 
   <h1 class="page-title">Сравнения и инструменты</h1>
   <p class="page-lead">
-    Сопоставление цен, поиск дублей, работа с таблицами.
-    Все скрипты — <b>прямо в браузере</b>, файлы никуда не отправляются.
+    Скрипты для работы с товарами, ценами и маркетплейсами.
+    Всё считается <b>прямо в браузере.</b>
   </p>
 
-  <span class="badge">🔒 Работает без сервера и без интернета</span>
+  <span class="badge">🔒 Работает без сервера</span>
+
+  <!-- ============================================ -->
+  <!-- ====  СЕКЦИЯ 1. НАШИ ИНТЕРНЕТ-МАГАЗИНЫ  ==== -->
+  <!-- ============================================ -->
+  <section class="catalog-section my-shop">
+
+    <h2 class="catalog-section-title">
+      <span class="shop-logo">A</span>
+      Наши интернет-магазины
+    </h2>
+    <p class="catalog-section-desc">
+      Скрипты для наших сайтов: подготовка прайса,
+      обработка выгрузок, сравнение с маркетплейсами.
+    </p>
 
     <div class="grid">
 
-    <a class="card script-card" href="./ozon.html" style="border-top:4px solid #005bff;">
-      <h3>🟦 Ozon</h3>
-      <p>Скрипты для работы с шаблонами Ozon: поиск соответствий, заполнение шаблона,
-         сравнение цен между магазинами.</p>
-      <span class="tag">Ozon · 1 скрипт</span>
-    </a>
+      <a class="card script-card" href="./albommonet.html">
+        <h3><span class="letter">A</span> ALBOMMONET.RU</h3>
+        <p>Скрипты для основного сайта: обработка CSV-выгрузки,
+           сравнение цен с WB по названию и по артикулу.</p>
+        <span class="tag">ALBOMMONET.RU · 3 скрипта</span>
+      </a>
 
-    <a class="card script-card" href="./wb.html" style="border-top:4px solid #cb11ab;">
-      <h3>🟪 Wildberries</h3>
-      <p>Скрипты для работы с выгрузками WB: поиск соответствий между магазинами,
-         сравнение цен, подготовка к загрузке.</p>
-      <span class="tag">WB · 3 скрипта</span>
-    </a>
+      <div class="card script-card albomov">
+        <h3><span class="letter">А</span> АЛЬБОМОВ.РФ — в разработке</h3>
+        <p>Как только появятся первые задачи для АЛЬБОМОВ.РФ —
+           здесь появятся соответствующие инструменты.</p>
+        <span class="tag">Скоро</span>
+      </div>
 
-    <a class="card script-card" href="./yandex.html" style="border-top:4px solid #fc3f1d;">
-      <h3>🟡 Яндекс.Маркет</h3>
-      <p>Скрипты для работы с выгрузками Я.Маркета: поиск соответствий,
-         сравнение цен.</p>
-      <span class="tag">Я.Маркет · скоро</span>
-    </a>
+    </div>
+  </section>
 
-  </div>
+  <!-- ============================================ -->
+  <!-- ====  СЕКЦИЯ 2. МАРКЕТПЛЕЙСЫ             ==== -->
+  <!-- ============================================ -->
+  <section class="catalog-section">
+
+    <h2 class="catalog-section-title">
+      <span class="icon">🏪</span>
+      Маркетплейсы
+    </h2>
+    <p class="catalog-section-desc">
+      Скрипты для работы с крупными маркетплейсами: сопоставление
+      товаров, сводки, сравнение цен между магазинами и площадками.
+    </p>
+
+    <div class="grid">
+
+      <a class="card script-card mp-ozon" href="./ozon.html">
+        <h3><span class="mp-letter mp-letter-ozon">O</span> Ozon</h3>
+        <p>Скрипты для работы с шаблонами Ozon: поиск соответствий
+           между магазинами, заполнение шаблона, сравнение цен.</p>
+        <span class="tag">Ozon · 1 скрипт</span>
+      </a>
+
+      <a class="card script-card mp-wb" href="./wb.html">
+        <h3><span class="mp-letter mp-letter-wb">W</span> Wildberries</h3>
+        <p>Скрипты для работы с выгрузками WB: сводка из двух файлов,
+           сравнение магазинов по названию и по артикулу.</p>
+        <span class="tag">WB · 3 скрипта</span>
+      </a>
+
+      <a class="card script-card mp-ya" href="./yandex.html">
+        <h3><span class="mp-letter mp-letter-ya">Я</span> Яндекс.Маркет</h3>
+        <p>Скрипты для работы с выгрузками Я.Маркета: поиск соответствий,
+           сравнение цен.</p>
+        <span class="tag">Я.Маркет · скоро</span>
+      </a>
+
+    </div>
+  </section>
 
 </main>
 
