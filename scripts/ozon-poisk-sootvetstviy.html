@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Поиск соответствий по названиям — ALBOMMONET.RU</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .back-link { display: inline-block; font-size: 13px; color: var(--primary);
+  text-decoration: none; margin-bottom: 16px; }
+  .back-link:hover { text-decoration: underline; }
+
+  .warn {
+    background: #e8f9ee; border-left: 4px solid #2ecc71; padding: 12px 16px;
+    border-radius: 8px; font-size: 14px; margin-bottom: 24px;
+  }
+  .step { font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+  .drop {
+    border: 2px dashed #c5c5c5; border-radius: 12px; padding: 32px 20px;
+    text-align: center; cursor: pointer; transition: .15s;
+    background: #fff; margin-bottom: 12px;
+  }
+  .drop:hover, .drop.hover { border-color: var(--primary); background: #f5f9ff; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop small { display: block; color: #999; margin-top: 8px; font-size: 12px; }
+  .drop .label { font-size: 13px; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px; }
+
+  .settings {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .settings h4 { margin: 0 0 14px; font-size: 14px; color: #444; font-weight: 600; }
+  .settings-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .field input, .field select {
+    padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; font-family: inherit; background: #fff;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--primary); }
+  .field input.error { border-color: #e74c3c; background: #fff5f5; }
+
+  .progress {
+    margin-top: 20px; height: 6px; background: #eaeaea;
+    border-radius: 3px; overflow: hidden; display: none;
+  }
+  .progress.active { display: block; }
+  .progress-bar {
+    height: 100%; background: var(--primary); width: 0;
+    transition: width .2s; border-radius: 3px;
+  }
+
+  #log {
+    margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+    white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+    max-height: 340px; overflow-y: auto; display: none;
+  }
+  #log.active { display: block; }
+
+  #preview { display: none; margin-top: 20px; }
+  #preview.active { display: block; }
+  table.preview { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.preview th, table.preview td {
+    padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left;
+    white-space: nowrap; overflow: hidden; max-width: 200px; text-overflow: ellipsis;
+  }
+  table.preview th { background: #f5f5f5; font-weight: 600; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.4px; }
+  table.preview tr.t-high { background: #f4fbf7; }
+  table.preview tr.t-mid { background: #fff8e6; }
+  table.preview tr.t-low { background: #fdecec; }
+  table.preview tr.orphan { background: #f0f0f0; color: #666; }
+
+  .summary {
+    margin-top: 16px; padding: 14px 18px; background: #f7f9fc;
+    border-radius: 8px; font-size: 14px; line-height: 1.7;
+  }
+  .summary .stat { display: inline-block; margin-right: 20px; }
+  .summary .num { font-weight: 700; color: var(--primary); }
+
+  .hint { font-size: 12px; color: #888; margin-top: 12px; line-height: 1.55; }
+  .hint code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; }
+
+  .sheet-row {
+    display: flex; gap: 10px; align-items: center; margin-top: 10px;
+    padding: 10px 12px; background: #f7f9fc; border-radius: 8px; font-size: 13px;
+  }
+  .sheet-row select { padding: 6px 10px; border-radius: 6px; border: 1px solid #ddd;
+    font-family: inherit; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./ozon.html" class="active">← Все скрипты Ozon</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <h1 class="page-title">🔍 Поиск соответствий по названиям</h1>
+  <p class="page-lead">
+    Сопоставьте два шаблона маркетплейса (например, для двух магазинов Ozon)
+    по названию товара. Колонки находятся <b>по заголовкам</b>, а не по буквам,
+    лист выбирается автоматически.
+  </p>
+
+  <div class="warn">
+    🔒 Всё считается в браузере. Файлы никуда не отправляются.
+  </div>
+
+  <!-- ============ 1. Два файла ============ -->
+  <div class="step">1. Загрузите два файла</div>
+
+  <div class="drop" id="dropA">
+    <div class="label">Файл магазина №1</div>
+    <div id="dropAText">📁 Перетащите .xls / .xlsx или нажмите
+      <small>Лист с товарами найдётся автоматически</small></div>
+    <input type="file" id="fileA" accept=".xls,.xlsx" hidden>
+  </div>
+  <div class="sheet-row" id="sheetRowA" style="display:none;">
+    <span>Лист:</span>
+    <select id="sheetSelectA"></select>
+    <span class="hint" style="margin:0;">(определён автоматически)</span>
+  </div>
+
+  <div class="drop" id="dropB" style="margin-top:16px;">
+    <div class="label">Файл магазина №2</div>
+    <div id="dropBText">📁 Перетащите .xls / .xlsx или нажмите
+      <small>Лист с товарами найдётся автоматически</small></div>
+    <input type="file" id="fileB" accept=".xls,.xlsx" hidden>
+  </div>
+  <div class="sheet-row" id="sheetRowB" style="display:none;">
+    <span>Лист:</span>
+    <select id="sheetSelectB"></select>
+    <span class="hint" style="margin:0;">(определён автоматически)</span>
+  </div>
+
+  <!-- ============ 2. Настройки ============ -->
+  <div class="step">2. Настройки</div>
+
+  <div class="settings">
+    <h4>Заголовки колонок, которые ищем в шапке</h4>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Колонка «Артикул»</label>
+        <input type="text" id="colArticle" value="Артикул">
+      </div>
+      <div class="field">
+        <label>Колонка «SKU»</label>
+        <input type="text" id="colSku" value="SKU">
+      </div>
+      <div class="field">
+        <label>Колонка «Название товара»</label>
+        <input type="text" id="colName" value="Название товара">
+      </div>
+      <div class="field">
+        <label>Колонка «Зачёркнутая цена, руб.»</label>
+        <input type="text" id="colPrice" value="Зачёркнутая цена, руб.">
+      </div>
+    </div>
+    <div class="hint">
+      Поиск заголовков — по вхождению, без учёта регистра и лишних пробелов.
+    </div>
+
+    <h4 style="margin-top:20px;">Параметры сопоставления</h4>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Порог схожести, % (50 – 100)</label>
+        <input type="text" id="threshold" value="70" maxlength="3">
+      </div>
+      <div class="field">
+        <label>Лист для чтения</label>
+        <select id="sheetMode">
+          <option value="auto">Автоматически (искать лист с товарами)</option>
+          <option value="manual">Вручную (выберу сам)</option>
+        </select>
+      </div>
+    </div>
+    <div class="hint">
+      Автоматически берётся лист, где есть все 4 заголовка. Обычно это
+      <code>Товары и цены</code>, а не <code>Инструкция</code>.<br>
+      <b>Подсказка по порогу:</b>
+      <code>60–70 %</code> — либерально (больше пар, есть риск ложных) ·
+      <code>70–85 %</code> — оптимально ·
+      <code>85–95 %</code> — строго (только почти точные).
+    </div>
+  </div>
+
+  <button id="runBtn" class="btn" disabled>▶ Найти соответствия и скачать</button>
+
+  <div class="progress" id="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <div id="log"></div>
+
+  <div id="preview">
+    <h3 style="margin-bottom:12px;">Предпросмотр (первые 30 строк)</h3>
+    <div style="overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px;">
+      <table class="preview" id="previewTable"></table>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div style="margin-top:16px;">
+      <button id="downloadBtn" class="btn">⬇️ Скачать полный результат (xlsx)</button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+  const progressEl = $('progress');
+  const progressBar = $('progressBar');
+
+  let wbA = null, wbB = null;
+  let fileAName = '', fileBName = '';
+  let resultRows = [];
+  let resultHeader = [];
+
+  // ---------- утилиты ----------
+  function log(msg, clear) {
+    if (clear) logEl.textContent = '';
+    logEl.textContent += msg + '\n';
+    logEl.classList.add('active');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setProgress(pct) {
+    progressEl.classList.add('active');
+    progressBar.style.width = pct + '%';
+  }
+
+  function normHeader(s) {
+    return String(s == null ? '' : s)
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[\s\u00a0]+/g, ' ')
+      .replace(/[.,;:!?()[\]{}«»"'`]/g, '')
+      .trim();
+  }
+
+  function normalizeName(s) {
+    let t = String(s == null ? '' : s);
+    t = t.toLowerCase();
+    t = t.replace(/ё/g, 'е').replace(/й/g, 'и');
+    t = t.replace(/[.,;:!?()[\]{}«»"'`\\/|_\-–—+*=<>@#$%^&~]/g, ' ');
+    t = t.replace(/[\s\u00a0]+/g, ' ').trim();
+    return t;
+  }
+
+  function similarity(a, b) {
+    a = String(a || ''); b = String(b || '');
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+    if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
+
+    const bigrams = s => {
+      const set = new Set();
+      for (let i = 0; i < s.length - 1; i++) set.add(s.substr(i, 2));
+      return set;
+    };
+    const A = bigrams(a), B = bigrams(b);
+    let inter = 0;
+    for (const g of A) if (B.has(g)) inter++;
+    const dice = 2 * inter / (A.size + B.size);
+    const lenRatio = Math.min(a.length, b.length) / Math.max(a.length, b.length);
+    return dice * 0.85 + lenRatio * 0.15;
+  }
+
+  function toStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v.trim();
+    return String(v).trim();
+  }
+
+  // ---------- поиск колонок в строке-шапке ----------
+  function findColsInRow(headerRow, wanted) {
+    const norm = headerRow.map(normHeader);
+    const cols = {};
+    let score = 0;
+    for (const key of Object.keys(wanted)) {
+      const target = normHeader(wanted[key]);
+      let idx = norm.findIndex(h => h === target);
+      if (idx === -1) idx = norm.findIndex(h => h.includes(target));
+      if (idx === -1 && target.length > 4) {
+        idx = norm.findIndex(h => target.includes(h) && h.length > 4);
+      }
+      cols[key] = idx;
+      if (idx !== -1) score++;
+    }
+    return { cols, score };
+  }
+
+  // ---------- поиск лучшего листа в книге ----------
+  function findBestSheet(wb, wanted) {
+    let best = null;
+    const details = [];
+    for (const sheetName of wb.SheetNames) {
+      const sheet = wb.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+      let sheetBest = { rowIdx: -1, cols: null, score: -1 };
+      for (let r = 0; r < Math.min(6, data.length); r++) {
+        const { cols, score } = findColsInRow(data[r] || [], wanted);
+        if (score > sheetBest.score) sheetBest = { rowIdx: r, cols, score };
+      }
+      details.push({ sheetName, score: sheetBest.score, rowIdx: sheetBest.rowIdx });
+      if (!best || sheetBest.score > best.score) {
+        best = { sheetName, ...sheetBest };
+      }
+    }
+    return { best, details };
+  }
+
+  // ---------- автопоиск первой строки данных ----------
+  function findDataStart(data, headerRowIdx, cols) {
+    const nameIdx = cols.name;
+    for (let r = headerRowIdx + 1; r < data.length; r++) {
+      const row = data[r] || [];
+      const v = toStr(row[nameIdx]);
+      if (!v) continue;
+      const nv = normHeader(v);
+      if (nv === 'название товара') continue;
+      if (nv === 'нередактируемое') continue;
+      return r;
+    }
+    return headerRowIdx + 1;
+  }
+
+  // ---------- drag&drop ----------
+  function wireDrop(dropId, inputId, onLoad) {
+    const drop = $(dropId), input = $(inputId);
+    drop.onclick = () => input.click();
+    input.onchange = e => { if (e.target.files[0]) readFile(e.target.files[0], onLoad); };
+    ['dragover','dragleave','drop'].forEach(ev => {
+      drop.addEventListener(ev, e => {
+        e.preventDefault();
+        if (ev === 'dragover') drop.classList.add('hover');
+        if (ev === 'dragleave') drop.classList.remove('hover');
+        if (ev === 'drop') {
+          drop.classList.remove('hover');
+          if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0], onLoad);
+        }
+      });
+    });
+  }
+
+  function readFile(file, cb) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        cb(wb, file.name);
+      } catch (err) {
+        log('❌ Не удалось прочитать файл: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ---------- обновление выпадающих списков листов ----------
+  function fillSheetSelect(selectId, rowId, wb, bestSheetName) {
+    const sel = $(selectId);
+    sel.innerHTML = wb.SheetNames.map(n =>
+      '<option value="' + n + '"' + (n === bestSheetName ? ' selected' : '') + '>' +
+      n + '</option>'
+    ).join('');
+    $(rowId).style.display = 'flex';
+    sel.onchange = () => { $('sheetMode').value = 'manual'; };
+  }
+
+  // ---------- получения wanted из формы ----------
+  function getWanted() {
+    return {
+      article: $('colArticle').value.trim() || 'Артикул',
+      sku:     $('colSku').value.trim() || 'SKU',
+      name:    $('colName').value.trim() || 'Название товара',
+      price:   $('colPrice').value.trim() || 'Зачёркнутая цена, руб.',
+    };
+  }
+
+  wireDrop('dropA', 'fileA', (wb, name) => {
+    wbA = wb; fileAName = name;
+    const wanted = getWanted();
+    const { best, details } = findBestSheet(wb, wanted);
+
+    $('dropA').classList.add('done');
+    $('dropAText').innerHTML = '✅ <b>' + name + '</b><br><small>Листов: ' +
+      wb.SheetNames.length + ', выбран: ' + best.sheetName + ' (совпадений: ' +
+      best.score + '/4)</small>';
+
+    log('Файл №1: ' + name, true);
+    log('  Листы в книге: ' + wb.SheetNames.join(', '));
+    for (const d of details) {
+      log('    • ' + d.sheetName + ' — совпадений ' + d.score + '/4' +
+          (d.rowIdx >= 0 ? ', шапка в строке ' + (d.rowIdx + 1) : ''));
+    }
+
+    fillSheetSelect('sheetSelectA', 'sheetRowA', wb, best.sheetName);
+    updateRunBtn();
+  });
+
+  wireDrop('dropB', 'fileB', (wb, name) => {
+    wbB = wb; fileBName = name;
+    const wanted = getWanted();
+    const { best, details } = findBestSheet(wb, wanted);
+
+    $('dropB').classList.add('done');
+    $('dropBText').innerHTML = '✅ <b>' + name + '</b><br><small>Листов: ' +
+      wb.SheetNames.length + ', выбран: ' + best.sheetName + ' (совпадений: ' +
+      best.score + '/4)</small>';
+
+    log('Файл №2: ' + name);
+    log('  Листы в книге: ' + wb.SheetNames.join(', '));
+    for (const d of details) {
+      log('    • ' + d.sheetName + ' — совпадений ' + d.score + '/4' +
+          (d.rowIdx >= 0 ? ', шапка в строке ' + (d.rowIdx + 1) : ''));
+    }
+
+    fillSheetSelect('sheetSelectB', 'sheetRowB', wb, best.sheetName);
+    updateRunBtn();
+  });
+
+  function updateRunBtn() {
+    $('runBtn').disabled = !(wbA && wbB);
+  }
+
+  // ---------- основная логика ----------
+  $('runBtn').onclick = () => {
+    if (!wbA || !wbB) return;
+
+    const wanted = getWanted();
+    const thresholdPct = parseFloat($('threshold').value) || 70;
+    const threshold = Math.max(0.3, Math.min(1, thresholdPct / 100));
+    const mode = $('sheetMode').value;
+
+    log('=== Поиск соответствий ===', true);
+    log('Порог схожести: ' + thresholdPct + ' %');
+
+    setProgress(0);
+
+    // выбираем лист для каждого файла
+    function pickSheet(wb, manualName) {
+      if (mode === 'manual' && manualName && wb.Sheets[manualName]) {
+        const sheet = wb.Sheets[manualName];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+        let bestRow = -1, bestCols = null, bestScore = -1;
+        for (let r = 0; r < Math.min(6, data.length); r++) {
+          const { cols, score } = findColsInRow(data[r] || [], wanted);
+          if (score > bestScore) { bestRow = r; bestCols = cols; bestScore = score; }
+        }
+        return { sheetName: manualName, data, cols: bestCols, headerRowIdx: bestRow, score: bestScore };
+      }
+      const { best } = findBestSheet(wb, wanted);
+      const sheet = wb.Sheets[best.sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+      return { sheetName: best.sheetName, data, cols: best.cols, headerRowIdx: best.rowIdx, score: best.score };
+    }
+
+    const manualNameA = mode === 'manual' ? $('sheetSelectA').value : null;
+    const manualNameB = mode === 'manual' ? $('sheetSelectB').value : null;
+
+    const A = pickSheet(wbA, manualNameA);
+    const B = pickSheet(wbB, manualNameB);
+
+    log('Лист №1: «' + A.sheetName + '» — шапка в строке ' +
+        (A.headerRowIdx + 1) + ', совпадений ' + A.score + '/4');
+    log('Лист №2: «' + B.sheetName + '» — шапка в строке ' +
+        (B.headerRowIdx + 1) + ', совпадений ' + B.score + '/4');
+
+    if (A.score < 4 || B.score < 4) {
+      const missA = Object.keys(wanted).filter(k => A.cols[k] === -1).map(k => wanted[k]);
+      const missB = Object.keys(wanted).filter(k => B.cols[k] === -1).map(k => wanted[k]);
+      if (missA.length) log('⚠️ №1: не найдены колонки — ' + missA.join(', '));
+      if (missB.length) log('⚠️ №2: не найдены колонки — ' + missB.join(', '));
+      log('👉 Проверьте: возможно, выбран не тот лист или заголовки написаны иначе.');
+      if (A.score === 0 || B.score === 0) {
+        log('❌ Ни одной колонки не найдено — прерываю.');
+        return;
+      }
+    }
+
+    const startA = findDataStart(A.data, A.headerRowIdx, A.cols);
+    const startB = findDataStart(B.data, B.headerRowIdx, B.cols);
+    log('Данные №1 начинаются со строки ' + (startA + 1));
+    log('Данные №2 начинаются со строки ' + (startB + 1));
+
+    // ----- собираем товары -----
+    function collect(data, cols, start) {
+      const out = [];
+      for (let i = start; i < data.length; i++) {
+        const row = data[i] || [];
+        const name = toStr(row[cols.name]);
+        if (!name) continue;
+        const nv = normHeader(name);
+        if (nv === 'название товара') continue;
+        if (nv === 'нередактируемое') continue;
+        out.push({
+          article: cols.article !== -1 ? toStr(row[cols.article]) : '',
+          sku:     cols.sku !== -1     ? toStr(row[cols.sku])     : '',
+          name:    name,
+          norm:    normalizeName(name),
+          price:   cols.price !== -1   ? toStr(row[cols.price])   : '',
+          _rowIdx: i,
+        });
+      }
+      return out;
+    }
+
+    const itemsA = collect(A.data, A.cols, startA);
+    const itemsB = collect(B.data, B.cols, startB);
+
+    log('Товаров в №1: ' + itemsA.length);
+    log('Товаров в №2: ' + itemsB.length);
+
+    if (!itemsA.length || !itemsB.length) {
+      log('❌ В одном из файлов нет товаров. Проверьте выбранный лист.');
+      return;
+    }
+
+    // ----- жадное сопоставление -----
+    const usedB = new Set();
+    const matches = [];
+    const total = itemsA.length;
+
+    for (let i = 0; i < total; i++) {
+      const a = itemsA[i];
+      let bestJ = -1, bestScore = 0;
+      for (let j = 0; j < itemsB.length; j++) {
+        if (usedB.has(j)) continue;
+        const s = similarity(a.norm, itemsB[j].norm);
+        if (s > bestScore) { bestScore = s; bestJ = j; }
+      }
+      if (bestJ !== -1 && bestScore >= threshold) {
+        usedB.add(bestJ);
+        matches.push({ a, b: itemsB[bestJ], score: bestScore });
+      }
+      if ((i + 1) % 50 === 0 || i === total - 1) {
+        setProgress(Math.round((i + 1) / total * 100));
+      }
+    }
+
+    log('Сопоставлено: ' + matches.length + ' из ' + itemsA.length);
+    log('Из них отличных (≥ 90 %): ' + matches.filter(m => m.score >= 0.9).length);
+    log('Хороших (' + thresholdPct + '–90 %): ' +
+        matches.filter(m => m.score >= threshold && m.score < 0.9).length);
+
+    // ----- результат -----
+    // A — Артикул №1 | B — SKU №1 | C — Название №1 | D — Зачёркнутая цена №1
+    // E — Зачёркнутая цена №2 | F — Название №2 | G — SKU №2 | H — Артикул №2
+    // I — Точность, %
+    resultHeader = [
+      'Артикул (м1)',
+      'SKU (м1)',
+      'Название (м1)',
+      'Зачёркнутая цена (м1)',
+      'Зачёркнутая цена (м2)',
+      'Название (м2)',
+      'SKU (м2)',
+      'Артикул (м2)',
+      'Точность, %',
+    ];
+
+    resultRows = [resultHeader];
+
+    matches.sort((x, y) => y.score - x.score);
+    for (const m of matches) {
+      const pct = Math.round(m.score * 100);
+      resultRows.push([
+        m.a.article,
+        m.a.sku,
+        m.a.name,
+        m.a.price,
+        m.b.price,
+        m.b.name,
+        m.b.sku,
+        m.b.article,
+        pct + ' %',
+      ]);
+    }
+
+    const matchedA = new Set(matches.map(m => m.a._rowIdx));
+    let orphanA = 0;
+    for (const it of itemsA) {
+      if (!matchedA.has(it._rowIdx)) {
+        resultRows.push([it.article, it.sku, it.name, it.price, '', '', '', '', 'нет пары']);
+        orphanA++;
+      }
+    }
+
+    const matchedB = new Set(matches.map(m => m.b._rowIdx));
+    let orphanB = 0;
+    for (const it of itemsB) {
+      if (!matchedB.has(it._rowIdx)) {
+        resultRows.push(['', '', '', '', it.price, it.name, it.sku, it.article, 'нет пары']);
+        orphanB++;
+      }
+    }
+
+    log('Позиций №1 без пары: ' + orphanA);
+    log('Позиций №2 без пары: ' + orphanB);
+
+    renderPreview(resultRows, matches, thresholdPct);
+    renderSummary(itemsA.length, itemsB.length, matches, orphanA, orphanB, thresholdPct);
+
+    $('preview').classList.add('active');
+    log('✅ Готово. Нажмите «Скачать полный результат».');
+  };
+
+  function renderPreview(rows, matches, thresholdPct) {
+    const table = $('previewTable');
+    const head = rows[0];
+    const body = rows.slice(1, 31);
+
+    let html = '<thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>';
+    for (const r of body) {
+      const acc = r[r.length - 1];
+      let cls = '';
+      if (acc === 'нет пары') {
+        cls = 'orphan';
+      } else {
+        const pct = parseInt(String(acc).replace(/\s*%$/, ''), 10) || 0;
+        if (pct >= 90) cls = 't-high';
+        else if (pct >= thresholdPct) cls = 't-mid';
+        else cls = 't-low';
+      }
+
+      html += '<tr class="' + cls + '">' +
+        r.map(v => '<td title="' + String(v).replace(/"/g, '&quot;') + '">' +
+          String(v).slice(0, 80) + '</td>').join('') +
+        '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  function renderSummary(nA, nB, matches, orphanA, orphanB, thresholdPct) {
+    const high = matches.filter(m => m.score >= 0.90).length;
+    const mid  = matches.filter(m => m.score >= thresholdPct / 100 && m.score < 0.90).length;
+    const low  = matches.filter(m => m.score < thresholdPct / 100).length;
+
+    $('summary').innerHTML =
+      '<span class="stat">Товаров в №1: <span class="num">' + nA + '</span></span>' +
+      '<span class="stat">Товаров в №2: <span class="num">' + nB + '</span></span><br>' +
+      '<span class="stat">Сопоставлено: <span class="num">' + matches.length + '</span></span>' +
+      '<span class="stat">Без пары №1: <span class="num">' + orphanA + '</span></span>' +
+      '<span class="stat">Без пары №2: <span class="num">' + orphanB + '</span></span><br>' +
+      '<span class="stat">Отличных (≥ 90 %): <span class="num">' + high + '</span></span>' +
+      '<span class="stat">Хороших (' + thresholdPct + '–90 %): <span class="num">' + mid + '</span></span>' +
+      '<span class="stat">Слабых (< ' + thresholdPct + ' %): <span class="num">' + low + '</span></span>';
+  }
+
+  $('downloadBtn').onclick = () => {
+    if (!resultRows.length) return;
+    const ws = XLSX.utils.aoa_to_sheet(resultRows);
+    ws['!cols'] = [
+      {wch:18},{wch:14},{wch:55},{wch:16},
+      {wch:16},{wch:55},{wch:14},{wch:18},
+      {wch:12},
+    ];
+    ws['!autofilter'] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: resultRows.length - 1, c: resultHeader.length - 1 }
+      })
+    };
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Соответствия');
+
+    const outName = 'соответствия_' +
+      (fileAName || 'file1').replace(/\.(xlsx?|xls)$/i, '') + '_' +
+      (fileBName || 'file2').replace(/\.(xlsx?|xls)$/i, '') + '.xlsx';
+
+    XLSX.writeFile(wb, outName);
+    log('✅ Скачан: ' + outName);
+  };
+
+})();
+</script>
+</body>
+</html>
