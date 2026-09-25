@@ -238,14 +238,14 @@
   <h1 class="page-title">📥 Перенос цен из образца в магазин №2</h1>
   <p class="page-lead">
     Берёт цены из <b>готового «правильного» файла</b> (образец магазина №1)
-    и подставляет к товарам <b>магазина №2</b>. Дубли артикулов помечаются
-    отдельной колонкой.
+    и подставляет к товарам <b>магазина №2</b>. Дубли артикулов идут
+    <b>рядом друг с другом</b> — так удобнее менять цены.
   </p>
 
   <div class="warn">
     🔒 Всё считается прямо в браузере. Файлы никуда не отправляются.<br>
-    🛡️ Скрипт чистит склеенные артикулы WB и <b>помечает дубли</b> артикулов
-    отдельными колонками.
+    🛡️ Дубли артикулов <b>стягиваются рядом</b>, но общий порядок
+    сохраняется — как в образце.
   </div>
 
   <div class="howto-box">
@@ -372,7 +372,7 @@
 
   <!-- ============ ИНСТРУКЦИЯ ============ -->
   <details class="info-box" open>
-    <summary>🎯 Как работает трёхуровневый матчинг и метки дублей</summary>
+    <summary>🎯 Как работают дубли и сортировка</summary>
     <div class="info-body">
       <p>Скрипт сопоставляет товары в <b>три прохода</b>:</p>
 
@@ -385,10 +385,15 @@
       <h4>Проход 2 — мягкий матчинг (порог 50 %)</h4>
       <p>Для остальных — по артикулу с низким порогом.</p>
 
-      <h4>🆕 Метки дублей</h4>
+      <h4>🆕 Сортировка: дубли — рядом</h4>
       <p>
-        В отчёте <b>первая и вторая колонки</b> — это метки дублей артикулов.
+        Строки сортируются так, чтобы <b>одинаковые артикулы шли рядом</b>,
+        но <b>общий порядок сохраняется как в образце</b>. Уникальные товары
+        и группы дублей идут в том порядке, в каком они впервые встречаются
+        в образце. Внутри группы дублей — сортировка по nmID.
       </p>
+
+      <h4>Метки дублей</h4>
       <ul>
         <li>
           <b>Колонка «⚠️ дубль артикула»</b> — если артикул продавца из образца
@@ -406,8 +411,7 @@
       <div class="danger-line">
         ⚠️ Если в колонке «⚠️ дубль артикула» стоит «⚠️ ДУБЛЬ» — значит
         в образце несколько строк с одинаковым артикулом, но разными nmID.
-        Возможно, это разные варианты одного товара (Белый, Чёрный),
-        у которых менеджер не задал различающий суффикс.
+        Проверь, какая цена правильная, и внеси правку в ЛК WB.
       </div>
     </div>
   </details>
@@ -706,6 +710,7 @@
         nmId,
         price,
         priceNum,
+        _sampleIdx: i,   // ← сохраняем исходный номер строки в образце
       });
     }
     return items;
@@ -962,11 +967,49 @@
     log('  🎯 артикул (90 %): ' + matchesArt.length);
     log('  📊 артикул (50 %): ' + matchesSoft.length);
 
+    // ==================================================
+    // СОРТИРОВКА: дубли — рядом, общий порядок — как в образце
+    // ==================================================
+    // 1. Идеальные — первыми, потом артикул, потом мягкие
+    // 2. Внутри — по первому индексу строки образца (sampleIdx)
+    //    для каждой группы артикула. Это гарантирует:
+    //    - сохранение порядка образца
+    //    - стягивание дублей рядом
+    // 3. Внутри одной группы — по nmID
+    const methodOrder = { ideal: 0, art: 1, soft: 2 };
+
+    // Для каждого матча находим «порядковый номер группы» в образце
+    // = минимальный индекс строки в образце, где встречается этот артикул
+    const groupOrder = new Map();
+    sampleItems.forEach((s, idx) => {
+      const key = s.articleNorm;
+      if (!key) return;
+      if (!groupOrder.has(key)) groupOrder.set(key, idx);
+    });
+
+    allMatches.sort((x, y) => {
+      const ox = methodOrder[x.method] || 0;
+      const oy = methodOrder[y.method] || 0;
+      if (ox !== oy) return ox - oy;
+
+      // Порядок группы в образце
+      const gx = groupOrder.get(x.sample.articleNorm) ?? 999999;
+      const gy = groupOrder.get(y.sample.articleNorm) ?? 999999;
+      if (gx !== gy) return gx - gy;
+
+      // Внутри группы — по nmID
+      const nx = String(x.sample.nmId || '');
+      const ny = String(y.sample.nmId || '');
+      if (nx !== ny) return nx.localeCompare(ny);
+
+      return y.score - x.score;
+    });
+
     // ==== ОТЧЁТ — 14 колонок ====
     resultRows = [[
       '⚠️ дубль артикула',           // 1
       '⚠️ где дубль',                // 2
-      'Артикул WB',                  // 3 ← NEW (nmID из образца)
+      'Артикул WB',                  // 3
       'Артикул продавца (образец)',  // 4
       'Артикул продавца (WB №2)',    // 5
       'Название (образец)',          // 6 — пусто
@@ -994,14 +1037,6 @@
       return g && g.indices.length > 1;
     }
 
-    const methodOrder = { ideal: 0, art: 1, soft: 2 };
-    allMatches.sort((x, y) => {
-      const ox = methodOrder[x.method] || 0;
-      const oy = methodOrder[y.method] || 0;
-      if (ox !== oy) return ox - oy;
-      return y.score - x.score;
-    });
-
     for (const m of allMatches) {
       const p1 = m.wb2.priceNum;
       const p2 = m.sample.priceNum;
@@ -1028,20 +1063,20 @@
       if (dup) dupMatches++;
 
       resultRows.push([
-        dup ? '⚠️ ДУБЛЬ' : '',                     // 1
-        dup ? getDupNmIds(m.sample.articleNorm) : '', // 2
-        m.sample.nmId,                             // 3 ← NEW
-        m.sample.article,                          // 4
-        m.wb2.article,                             // 5
-        '',                                        // 6
-        m.wb2.name,                                // 7
-        m.sample.price,                            // 8
-        m.wb2.priceStr,                            // 9
-        diffRub,                                   // 10
-        diffPct,                                   // 11
-        status,                                    // 12
-        methodLabel,                               // 13
-        Math.round(m.score * 100) + ' %',          // 14
+        dup ? '⚠️ ДУБЛЬ' : '',
+        dup ? getDupNmIds(m.sample.articleNorm) : '',
+        m.sample.nmId,
+        m.sample.article,
+        m.wb2.article,
+        '',
+        m.wb2.name,
+        m.sample.price,
+        m.wb2.priceStr,
+        diffRub,
+        diffPct,
+        status,
+        methodLabel,
+        Math.round(m.score * 100) + ' %',
       ]);
     }
 
@@ -1051,16 +1086,8 @@
     for (const it of wb2Items) {
       if (matchedWb2.has(it.nmId)) continue;
       resultRows.push([
-        '', '', '', '',                // 1-4
-        it.article,                    // 5
-        '',                            // 6
-        it.name,                       // 7
-        '',                            // 8
-        it.priceStr,                   // 9
-        '', '',                        // 10-11
-        '⚪ Нет пары в образце',        // 12
-        '',                            // 13
-        'нет пары',                    // 14
+        '', '', '', '', it.article, '', it.name, '', it.priceStr,
+        '', '', '⚪ Нет пары в образце', '', 'нет пары',
       ]);
       orphanWb2++;
     }
@@ -1071,19 +1098,8 @@
     for (const it of sampleItems) {
       if (matchedSample.has(it.nmId)) continue;
       resultRows.push([
-        '',                            // 1
-        '',                            // 2
-        it.nmId,                       // 3 ← NEW
-        it.article,                    // 4
-        '',                            // 5
-        '',                            // 6
-        '',                            // 7
-        it.price,                      // 8
-        '',                            // 9
-        '', '',                        // 10-11
-        '⚪ Только в образце',          // 12
-        '',                            // 13
-        'нет пары',                    // 14
+        '', '', it.nmId, it.article, '', '', '', it.price, '',
+        '', '', '⚪ Только в образце', '', 'нет пары',
       ]);
       orphanSample++;
     }
@@ -1158,7 +1174,7 @@
     ws['!cols'] = [
       {wch:16},  // 1 ⚠️ дубль артикула
       {wch:26},  // 2 ⚠️ где дубль
-      {wch:16},  // 3 Артикул WB (nmID из образца)
+      {wch:16},  // 3 Артикул WB
       {wch:26},  // 4 Артикул (образец)
       {wch:26},  // 5 Артикул (WB №2)
       {wch:42},  // 6 Название (образец)
