@@ -17,7 +17,6 @@
     border-radius: 5px; letter-spacing: 0.5px;
     vertical-align: middle; margin-left: 8px;
   }
-
   .howto-box {
     background: #f8f5ff; border-left: 4px solid #cb11ab;
     border-radius: 10px; padding: 16px 20px;
@@ -31,7 +30,6 @@
     border-radius: 4px; font-size: 13px;
     font-family: ui-monospace, Consolas, monospace;
   }
-
   .step-title {
     font-size: 17px; font-weight: 700; margin: 28px 0 6px;
     display: flex; align-items: center; gap: 10px;
@@ -47,7 +45,6 @@
     padding-left: 40px;
   }
   .step-desc b { color: #1a1a1a; }
-
   .shop-block {
     background: #fff; border: 1px solid var(--border);
     border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
@@ -68,7 +65,6 @@
     font-weight: 700; flex-shrink: 0;
   }
   .shop-block.shop2 .num-circle { background: #7b0c68; }
-
   .drop {
     border: 2px dashed #c5c5c5; border-radius: 10px;
     padding: 20px 16px; text-align: center; cursor: pointer;
@@ -79,7 +75,6 @@
   .drop .icon { font-size: 24px; margin-bottom: 6px; line-height: 1; }
   .drop .title { font-size: 14px; font-weight: 600; }
   .drop small { display: block; color: #999; margin-top: 6px; font-size: 12px; }
-
   .settings {
     background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
     padding: 20px; margin-bottom: 20px;
@@ -96,7 +91,6 @@
     font-size: 14px; font-family: inherit;
   }
   .field input:focus { outline: none; border-color: #cb11ab; }
-
   #log {
     margin-top: 20px; font-size: 13px; color: #555; background: #fff;
     border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
@@ -104,7 +98,6 @@
     max-height: 420px; overflow-y: auto; display: none;
   }
   #log.active { display: block; }
-
   #preview { display: none; margin-top: 20px; }
   #preview.active { display: block; }
   table.preview { width: 100%; border-collapse: collapse; font-size: 12.5px; }
@@ -118,7 +111,6 @@
   table.preview tr.s-up { background: #fff8e6; }
   table.preview tr.s-down { background: #e8f4ff; }
   table.preview tr.s-orphan { background: #f0f0f0; color: #666; }
-
   .summary {
     margin-top: 16px; padding: 14px 18px; background: #f7f9fc;
     border-radius: 8px; font-size: 14px; line-height: 1.7;
@@ -128,10 +120,8 @@
   .summary .stat.eq .num { color: #1e874b; }
   .summary .stat.up .num { color: #8a6d00; }
   .summary .stat.down .num { color: #3d7bc4; }
-
   .hint { font-size: 12px; color: #888; margin-top: 12px; line-height: 1.55; }
   .hint code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; }
-
   .legend {
     display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px;
     font-size: 12.5px; color: #555;
@@ -144,7 +134,6 @@
   .legend .sq-up { background: #ffe8a3; }
   .legend .sq-down { background: #c7e0ff; }
   .legend .sq-orphan { background: #dcdcdc; }
-
   .info-box {
     background: #f8f5ff; border-left: 4px solid #cb11ab;
     border-radius: 10px; padding: 0; margin: 24px 0; overflow: hidden;
@@ -194,7 +183,6 @@
     padding: 8px 12px; border-radius: 5px; margin: 6px 0;
     font-size: 13px; color: #8a6d00;
   }
-
   .method-chip {
     display: inline-block;
     font-size: 11px;
@@ -237,14 +225,15 @@
   <h1 class="page-title">🎯 Сравнение WB ↔ WB — умный матчинг <span class="marketplace-badge">WILDBERRIES</span></h1>
   <p class="page-lead">
     Двухпроходное сопоставление товаров двух магазинов WB:
-    сначала <b>по артикулу</b> (порог 90 %), затем — для несовпавших —
-    <b>по названию</b> (порог 50 %). Скрипт чистит склеенные артикулы WB.
+    сначала <b>точное совпадение по артикулу</b> (со срезанием всего
+    справа от <code>/</code>), затем — для несовпавших —
+    <b>по названию</b> (порог 50 %).
   </p>
 
   <div class="warn">
     🔒 Всё считается прямо в браузере. Файлы никуда не отправляются.<br>
-    🛡️ Скрипт умеет чистить склеенные артикулы WB
-    (например, <code>LB1-ProfLB1-ProfПрозрачный</code> → <code>LB1-Prof</code>).
+    🛡️ В артикулах срезается только всё справа от <code>/</code>.
+    Больше ничего не режем.
   </div>
 
   <!-- ============ КАК РАБОТАТЬ ============ -->
@@ -331,24 +320,22 @@
     Настройки и запуск
   </div>
   <div class="step-desc">
-    Два порога: <b>по артикулу</b> (проход 1) и <b>по названию</b> (проход 2).
+    Порог <b>только для прохода по названию</b>. Проход по артикулу —
+    точный, без порогов.
   </div>
 
   <div class="settings">
-    <h4>Пороги схожести</h4>
+    <h4>Настройки матчинга</h4>
     <div class="settings-grid">
-      <div class="field">
-        <label>Проход 1 — по артикулу, % (70 – 100)</label>
-        <input type="text" id="threshold" value="90" maxlength="3">
-      </div>
       <div class="field">
         <label>Проход 2 — по названию, % (50 – 100)</label>
         <input type="text" id="thresholdName" value="50" maxlength="3">
       </div>
     </div>
     <div class="hint">
-      <b>90 %</b> — оптимально для артикулов ·
-      <b>50 %</b> — оптимально для названий
+      <b>Проход 1</b> — точное совпадение артикулов после срезания всего
+      справа от <code>/</code>.<br>
+      <b>Проход 2</b> — по названию, порог по умолчанию <b>50 %</b>.
     </div>
 
     <h4 style="margin-top:20px;">Точные названия колонок (опционально)</h4>
@@ -398,64 +385,69 @@
 
   <!-- ============ ИНСТРУКЦИЯ 1 ============ -->
   <details class="info-box" open>
-    <summary>🎯 Как работает двухпроходный смарт-матчинг</summary>
+    <summary>🎯 Как работает двухпроходный матчинг</summary>
     <div class="info-body">
       <p>Скрипт сопоставляет товары <b>в два прохода</b>:</p>
 
-      <h4>Проход 1 — по артикулу (порог 90 %)</h4>
+      <h4>Проход 1 — точное совпадение артикулов</h4>
       <p>
-        WB иногда отдаёт артикул в «склеенном» виде. Скрипт это чистит:
+        В обоих магазинах артикул нормализуется: нижний регистр, <code>ё→е</code>,
+        <code>й→и</code>, унифицируются дефисы. Затем <b>срезается всё от первого
+        <code>/</code> до конца</b> (включая сам <code>/</code>).
       </p>
       <table>
         <thead>
-          <tr><th>Что отдаёт WB</th><th>После очистки</th></tr>
+          <tr><th>Магазин 1</th><th>Магазин 2</th><th>Норм. 1</th><th>Норм. 2</th><th>Пара?</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><code>LB1-ProfLB1-ProfПрозрачный</code></td>
-            <td><code>LB1-Prof</code></td>
+            <td><code>ЛБ4-О</code></td>
+            <td><code>ЛБ4-О/12/АЭ</code></td>
+            <td><code>лб4-о</code></td>
+            <td><code>лб4-о</code></td>
+            <td>✅</td>
           </tr>
           <tr>
-            <td><code>АБ-10Б/АБ-10Б/Бордовый</code></td>
-            <td><code>АБ-10Б</code></td>
+            <td><code>ЛКАРТ-10</code></td>
+            <td><code>ЛКАРТ-10/НТ</code></td>
+            <td><code>лкарт-10</code></td>
+            <td><code>лкарт-10</code></td>
+            <td>✅</td>
           </tr>
           <tr>
-            <td><code>АП-97ПАП-97ПГолубой</code></td>
-            <td><code>АП-97П</code></td>
+            <td><code>ЛКАРТ-10</code></td>
+            <td><code>ЛКАРТ-10Ч-О/НТ</code></td>
+            <td><code>лкарт-10</code></td>
+            <td><code>лкарт-10ч-о</code></td>
+            <td>❌ разные</td>
           </tr>
           <tr>
-            <td><code>ЛМ48-5_Prof</code></td>
-            <td><code>ЛМ48-5_Prof</code> (не меняется)</td>
+            <td><code>ЛБ4-О</code></td>
+            <td><code>ЛБ4</code></td>
+            <td><code>лб4-о</code></td>
+            <td><code>лб4</code></td>
+            <td>❌ разные</td>
           </tr>
         </tbody>
       </table>
 
       <div class="success-line">
-        ✅ LB1-Prof ↔ LB1-ProfLB1-ProfПрозрачный → 100 %
+        ✅ Сравнение только точным равенством. Никаких «примерно похожих».
       </div>
 
       <h4>Проход 2 — по названию (порог 50 %)</h4>
       <p>
-        Для тех товаров, что не склеились по артикулу (например, если
-        у одного и того же товара в двух магазинах разные артикулы продавца):
+        Для тех товаров, что не склеились по артикулу:
       </p>
       <div class="success-line">
-        ✅ АБ-10Б-Б (магазин 1) ↔ АБ-10Б/АБ-10Б/Бордовый (магазин 2) → ~55 %
+        ✅ ЛКАРТ-10 (М1) ↔ ЛКАРТ-10Ч-О/НТ (М2) — если названия совпадут → пара
       </div>
 
       <h4>Колонка «Способ» в отчёте</h4>
       <ul>
-        <li><span class="method-chip method-art">🎯 по артикулу</span> — точно
-          (или с мелкими различиями)</li>
-        <li><span class="method-chip method-name">📊 по названию</span> —
-          пара найдена по названию (проверь глазами)</li>
+        <li><span class="method-chip method-art">🎯 по артикулу</span> — точное совпадение</li>
+        <li><span class="method-chip method-name">📊 по названию</span> — пара найдена по названию (проверь глазами)</li>
       </ul>
-
-      <div class="warn-line">
-        💡 <b>Совет:</b> если по названию много склеек, но они «серые» —
-        отфильтруй в Excel по колонке «Способ» = «📊 по названию»
-        и проверь вручную.
-      </div>
     </div>
   </details>
 
@@ -464,9 +456,8 @@
     <summary>❓ Что делать, если WB переименовал колонки</summary>
     <div class="info-body">
       <p>
-        WB любит менять названия колонок в выгрузках. Скрипт это
-        <b>предусмотрел</b>: он ищет нужные данные <b>по списку синонимов</b>.
-        В 99 % случаев <b>ничего делать не надо</b>.
+        WB любит менять названия колонок в выгрузках. Скрипт ищет данные
+        <b>по списку синонимов</b>. В 99 % случаев <b>ничего делать не надо</b>.
       </p>
 
       <h4>Что скрипт понимает «из коробки»</h4>
@@ -518,48 +509,27 @@
           <tr><th>Статус</th><th>Цвет</th><th>Что значит</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td>🟢 <b>Совпадает</b></td>
-            <td>зелёный</td>
-            <td>Цена м1 = цена м2.</td>
-          </tr>
-          <tr>
-            <td>🟡 <b>М2 дороже на X ₽</b></td>
-            <td>жёлтый</td>
-            <td>Во втором магазине товар на X ₽ дороже.</td>
-          </tr>
-          <tr>
-            <td>🔴 <b>М2 дешевле на X ₽</b></td>
-            <td>голубой</td>
-            <td>Во втором магазине товар на X ₽ дешевле.</td>
-          </tr>
-          <tr>
-            <td>⚪ <b>Только в М1</b></td>
-            <td>серый</td>
-            <td>Артикул есть только в первом магазине.</td>
-          </tr>
-          <tr>
-            <td>⚪ <b>Только в М2</b></td>
-            <td>серый</td>
-            <td>Артикул есть только во втором магазине.</td>
-          </tr>
+          <tr><td>🟢 <b>Совпадает</b></td><td>зелёный</td><td>Цена м1 = цена м2.</td></tr>
+          <tr><td>🟡 <b>М2 дороже на X ₽</b></td><td>жёлтый</td><td>Во втором магазине товар на X ₽ дороже.</td></tr>
+          <tr><td>🔴 <b>М2 дешевле на X ₽</b></td><td>голубой</td><td>Во втором магазине товар на X ₽ дешевле.</td></tr>
+          <tr><td>⚪ <b>Только в М1</b></td><td>серый</td><td>Артикул есть только в первом магазине.</td></tr>
+          <tr><td>⚪ <b>Только в М2</b></td><td>серый</td><td>Артикул есть только во втором магазине.</td></tr>
         </tbody>
       </table>
 
       <h4>Колонка «Способ»</h4>
       <ul>
         <li><span class="method-chip method-art">🎯 по артикулу</span> — пара
-          найдена в первом проходе (максимальная уверенность)</li>
+          найдена в первом проходе</li>
         <li><span class="method-chip method-name">📊 по названию</span> — пара
           найдена во втором проходе (проверяй глазами)</li>
       </ul>
 
       <h4>Если увидишь много «нет пары»</h4>
       <ul>
-        <li>Снизь порог 1 до 80 % — склеится больше артикулов.</li>
-        <li>Проверь: если менеджеры пишут артикулы по-разному в двух магазинах,
-            поможет порог 2 (название).</li>
-        <li>Если товары в двух магазинах — совсем разные — так и должно быть.</li>
+        <li>Убедись, что артикулы в двух магазинах действительно одинаковые
+            (с точностью до <code>/...</code>).</li>
+        <li>Снизь порог по названию до 40 % — тогда второй проход склеит больше.</li>
       </ul>
     </div>
   </details>
@@ -573,7 +543,8 @@
         <li>Принимает 4 файла WB (2 магазина × 2 файла).</li>
         <li>Внутри каждого магазина склеивает характеристики + цены по nmID.</li>
         <li><b>Проход 1</b> — сопоставляет товары двух магазинов
-            <b>по артикулу продавца</b> с порогом 90 %.</li>
+            <b>по точному совпадению артикула</b> после срезания всего
+            справа от <code>/</code>.</li>
         <li><b>Проход 2</b> — для несовпавших сопоставляет
             <b>по названию</b> с порогом 50 %.</li>
         <li>Считает разницу цен и выдаёт Excel-отчёт.</li>
@@ -583,14 +554,15 @@
       <table>
         <thead><tr><th>Колонка</th><th>Что внутри</th></tr></thead>
         <tbody>
-          <tr><td><b>Артикул м1 / м2</b></td><td>артикул продавца (очищенный от склеек)</td></tr>
+          <tr><td><b>Артикул WB м1 / м2</b></td><td>nmID — числовой ID карточки WB</td></tr>
+          <tr><td><b>Артикул м1 / м2</b></td><td>артикул продавца (без срезания)</td></tr>
           <tr><td><b>Название м1 / м2</b></td><td>название товара</td></tr>
           <tr><td><b>Цена м1 / м2</b></td><td>цена в магазине</td></tr>
           <tr><td><b>Статус</b></td><td>🟢 / 🟡 / 🔴 / ⚪</td></tr>
           <tr><td><b>Разница ₽</b></td><td>цена м2 − цена м1</td></tr>
           <tr><td><b>Разница %</b></td><td>разница ₽ от цены м1</td></tr>
           <tr><td><b>Способ</b></td><td>🎯 по артикулу / 📊 по названию</td></tr>
-          <tr><td><b>Точность, %</b></td><td>насколько совпали артикулы или названия</td></tr>
+          <tr><td><b>Точность, %</b></td><td>100 % для артикула, % Dice для названия</td></tr>
         </tbody>
       </table>
 
@@ -598,10 +570,9 @@
       <ul>
         <li>Шапка ищется в первых 10 строках каждого листа.</li>
         <li>Скрипт пробует все листы и выбирает тот, где больше совпадений.</li>
-        <li>Чистка артикулов: убираем склейки (<code>AB-12AB-12Цвет</code> → <code>AB-12</code>).</li>
-        <li>Нормализация артикулов для сравнения: нижний регистр, только буквы-цифры.</li>
+        <li>Нормализация артикула: нижний регистр, ё→е, й→и, срезание от <code>/</code>, удаление пробелов.</li>
         <li>Дубликаты nmID отбрасываются.</li>
-        <li>Сравнение — по коэффициенту Dice + бонус за совпадение длины.</li>
+        <li>Сравнение названий — по коэффициенту Dice + бонус за совпадение длины.</li>
       </ul>
     </div>
   </details>
@@ -669,42 +640,20 @@
       .trim();
   }
 
-  // ==== УМНАЯ ЧИСТКА АРТИКУЛА WB ====
-  // "АБ-10Б/АБ-10Б/Бордовый" → "АБ-10Б"
-  // "LB1-ProfLB1-ProfПрозрачный" → "LB1-Prof"
-  function cleanWbArticle(s) {
-    let t = String(s || '').trim();
-    if (!t) return '';
-
-    // Случай 1: "АБ-10Б/АБ-10Б/Бордовый" → "АБ-10Б"
-    const slashParts = t.split('/');
-    if (slashParts.length >= 2) {
-      const first = slashParts[0].trim();
-      const second = slashParts[1].trim();
-      if (first && first === second) return first;
-    }
-
-    // Случай 2: "LB1-ProfLB1-ProfПрозрачный" → "LB1-Prof"
-    let m = t.match(/^(.{3,}?)\1/);
-    if (m) return m[1];
-
-    // Случай 3: короткий повтор "АП-97ПАП-97П" → "АП-97П"
-    m = t.match(/^(.{2,}?)\1/);
-    if (m) return m[1];
-
-    return t;
-  }
-
-  // ==== НОРМАЛИЗАЦИЯ АРТИКУЛА (для сравнения) ====
+  // ==== НОРМАЛИЗАЦИЯ АРТИКУЛА ====
+  // Только: lower, ё→е, й→и, унификация дефисов,
+  // срезание всего от первого "/" до конца, удаление пробелов.
+  // Больше НИЧЕГО не срезаем.
   function normalizeArticle(s) {
-    let t = String(s || '');
-    t = t.toLowerCase();
+    let t = String(s || '').toLowerCase();
     t = t.replace(/ё/g, 'е').replace(/й/g, 'и');
-    t = t.replace(/[^a-zа-я0-9]/gi, '');
+    t = t.replace(/[–—−]/g, '-');
+    const slashIdx = t.indexOf('/');
+    if (slashIdx !== -1) t = t.slice(0, slashIdx);
+    t = t.replace(/[\s\u00a0\u200b]+/g, '');
     return t;
   }
 
-  // ==== НОРМАЛИЗАЦИЯ НАЗВАНИЯ (для сравнения) ====
   function normalizeName(s) {
     let t = String(s || '');
     t = t.toLowerCase();
@@ -911,11 +860,9 @@
       const ch = charsMap.get(nmId);
       const pr = pricesMap.get(nmId);
       const price = pr ? pr.price : '';
-      const articleClean = cleanWbArticle(ch.article);
       items.push({
-        article: articleClean,
-        articleRaw: ch.article,
-        articleNorm: normalizeArticle(articleClean),
+        article: ch.article,
+        articleNorm: normalizeArticle(ch.article),
         nmId,
         name: ch.name,
         nameNorm: normalizeName(ch.name),
@@ -998,13 +945,11 @@
     if (!(wbChars1 && wbPrices1 && wbChars2 && wbPrices2)) return;
 
     log('', true);
-    log('=== Сравнение WB ↔ WB (двухпроходный смарт-матчинг) ===');
+    log('=== Сравнение WB ↔ WB (двухпроходный матчинг) ===');
 
-    const thresholdPct = parseFloat($('threshold').value) || 90;
-    const threshold = Math.max(0.3, Math.min(1, thresholdPct / 100));
     const thresholdNamePct = parseFloat($('thresholdName').value) || 50;
     const thresholdName = Math.max(0.3, Math.min(1, thresholdNamePct / 100));
-    log('Проход 1 (артикул): порог ' + thresholdPct + ' %');
+    log('Проход 1: точное совпадение артикулов (без порога)');
     log('Проход 2 (название): порог ' + thresholdNamePct + ' %');
 
     const force = {
@@ -1021,25 +966,30 @@
     const items2 = buildShopSummary(wbChars2, wbPrices2, force, 'МАГАЗИН №2');
     if (!items2) return;
 
-    // ==== ПРОХОД 1 — по артикулу ====
+    // ==== ПРОХОД 1 — ТОЧНОЕ совпадение по артикулу ====
     log('');
-    log('=== Проход 1: сопоставление по артикулу (порог ' + thresholdPct + ' %) ===');
+    log('=== Проход 1: точное совпадение артикулов ===');
+    log('   (срезаем всё от первого "/" вправо)');
 
     const used2 = new Set();
     const matches = [];
 
+    // Индекс M2 по нормализованному артикулу (первое вхождение)
+    const m2ByArt = new Map();
+    for (let j = 0; j < items2.length; j++) {
+      const key = items2[j].articleNorm;
+      if (!key) continue;
+      if (!m2ByArt.has(key)) m2ByArt.set(key, j);
+    }
+
     for (let i = 0; i < items1.length; i++) {
       const a = items1[i];
-      let bestJ = -1, bestScore = 0;
-      for (let j = 0; j < items2.length; j++) {
-        if (used2.has(j)) continue;
-        const s = similarity(a.articleNorm, items2[j].articleNorm);
-        if (s > bestScore) { bestScore = s; bestJ = j; }
-      }
-      if (bestJ !== -1 && bestScore >= threshold) {
-        used2.add(bestJ);
-        matches.push({ a, b: items2[bestJ], score: bestScore, method: 'art' });
-      }
+      if (!a.articleNorm) continue;
+      const j = m2ByArt.get(a.articleNorm);
+      if (j === undefined || used2.has(j)) continue;
+
+      used2.add(j);
+      matches.push({ a, b: items2[j], score: 1.0, method: 'art' });
     }
 
     log('Проход 1 нашёл пар: ' + matches.length);
@@ -1078,6 +1028,7 @@
 
     // ==== ОТЧЁТ ====
     resultRows = [[
+      'Артикул WB м1', 'Артикул WB м2',
       'Артикул м1', 'Название м1', 'Цена м1',
       'Цена м2', 'Название м2', 'Артикул м2',
       'Статус', 'Разница ₽', 'Разница %',
@@ -1112,6 +1063,7 @@
         : '📊 по названию';
 
       resultRows.push([
+        m.a.nmId, m.b.nmId,
         m.a.article, m.a.name, m.a.priceStr,
         m.b.priceStr, m.b.name, m.b.article,
         status, diffRub, diffPct,
@@ -1124,6 +1076,7 @@
     for (const it of items1) {
       if (matchedA.has(it.nmId)) continue;
       resultRows.push([
+        it.nmId, '',
         it.article, it.name, it.priceStr,
         '', '', '',
         '⚪ Только в М1', '', '',
@@ -1137,6 +1090,7 @@
     for (const it of items2) {
       if (matchedB.has(it.nmId)) continue;
       resultRows.push([
+        '', it.nmId,
         '', '', '',
         it.priceStr, it.name, it.article,
         '⚪ Только в М2', '', '',
@@ -1171,7 +1125,7 @@
     let html = '<thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
       '</tr></thead><tbody>';
     for (const r of body) {
-      const status = String(r[6] || '');
+      const status = String(r[8] || '');
       let cls = '';
       if (status.indexOf('Совпадает') !== -1) cls = 's-eq';
       else if (status.indexOf('дороже') !== -1) cls = 's-up';
@@ -1203,25 +1157,21 @@
     if (!resultRows.length) return;
     const ws = XLSX.utils.aoa_to_sheet(resultRows);
     ws['!cols'] = [
-      {wch:24},{wch:52},{wch:12},
-      {wch:12},{wch:52},{wch:24},
-      {wch:34},{wch:12},{wch:12},
-      {wch:16},{wch:12},
+      {wch:16}, {wch:16},
+      {wch:24}, {wch:52}, {wch:12},
+      {wch:12}, {wch:52}, {wch:24},
+      {wch:34}, {wch:12}, {wch:12},
+      {wch:16}, {wch:12},
     ];
     ws['!autofilter'] = {
       ref: XLSX.utils.encode_range({
         s: { r: 0, c: 0 },
-        e: { r: resultRows.length - 1, c: 10 }
+        e: { r: resultRows.length - 1, c: 12 }
       })
     };
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Сравнение');
-
-    const outName = 'СРАВНЕНИЕ_WB_SMART_PRO_' +
-      (fileNames.chars1 || 'm1').replace(/\.(xlsx?|xls)$/i, '').slice(0, 20) + '_vs_' +
-      (fileNames.chars2 || 'm2').replace(/\.(xlsx?|xls)$/i, '').slice(0, 20) +
-      '.xlsx';
-
+    const outName = 'СРАВНЕНИЕ_WB_SMART_PRO' + '.xlsx';
     XLSX.writeFile(wb, outName);
     log('✅ Скачан: ' + outName);
   };
