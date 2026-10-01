@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Скрипты Яндекс.Маркет — ALBOMMONET.RU</title>
+<title>Скрипты Яндекс.Маркета — ALBOMMONET.RU</title>
 <link rel="stylesheet" href="../style.css">
 <style>
   .hero {
-    background: linear-gradient(135deg, #fc3f1d 0%, #a4250e 100%);
+    background: linear-gradient(135deg, #fc3f1d 0%, #b82c14 100%);
     color: #fff; padding: 40px 32px; border-radius: var(--radius);
     margin-bottom: 32px;
   }
@@ -24,7 +24,7 @@
   .script-card p { font-size: 14px; color: var(--text-muted); flex: 1;
     margin-bottom: 14px; }
   .tag { display: inline-block; font-size: 11px; padding: 3px 8px;
-    background: #ffeae6; color: #c33619; border-radius: 6px;
+    background: #ffe8e0; color: #8a2400; border-radius: 6px;
     align-self: flex-start; font-weight: 500; }
   .back-link { display: inline-block; font-size: 13px; color: var(--primary);
     text-decoration: none; margin-bottom: 16px; }
@@ -53,33 +53,26 @@
   <a href="./index.html" class="back-link">← Все маркетплейсы</a>
 
   <div class="hero">
-    <div class="badge-logo">ЯНДЕКС.МАРКЕТ</div>
-    <h1>🟡 Скрипты Яндекс.Маркет</h1>
-    <p>Инструменты для работы с выгрузками Я.Маркета: сравнение магазинов,
-       поиск соответствий, сравнение цен с другими площадками.</p>
+    <div class="badge-logo">YANDEX.MARKET</div>
+    <h1>🟡 Скрипты Яндекс.Маркета</h1>
+    <p>Инструменты для работы с выгрузками Я.Маркета: сводка магазинов, склейка с сайтом, поиск соответствий.</p>
   </div>
 
   <div class="grid">
 
-    <div class="card script-card" style="opacity:0.65; cursor:default;">
-      <h3>🔍 Поиск соответствий по названиям</h3>
-      <p>Сопоставьте две выгрузки Я.Маркета по названию товара.
-         Колонки находятся по заголовкам.</p>
-      <span class="tag">В работе · Я ↔ Я</span>
-    </div>
+    <a class="card script-card" href="./yandex-svodka-TEMP.html">
+      <h3>📊 Сводка Я.Маркет: М1 ↔ М2 по названию</h3>
+      <p>Берёт файл Я.Маркета и делит товары на два магазина (М1 — числовой SKU,
+         М2 — буквенный). Сводит по названию: сначала точно, потом нечётко (70 %).</p>
+      <span class="tag">Я.Маркет · сводка</span>
+    </a>
 
-    <div class="card script-card" style="opacity:0.65; cursor:default;">
-      <h3>📊 Сравнение Ozon ↔ Я.Маркет</h3>
-      <p>Сопоставьте товары между Ozon и Я.Маркетом по названию — отчёт
-         с ценами обоих маркетплейсов.</p>
-      <span class="tag">В работе</span>
-    </div>
-
-    <div class="card script-card" style="opacity:0.65; cursor:default;">
-      <h3>📥 Подготовка файла для Я.Маркета</h3>
-      <p>Сформировать файл с новыми ценами для загрузки в кабинет Я.Маркета.</p>
-      <span class="tag">В работе</span>
-    </div>
+    <a class="card script-card" href="./yandex-x-site-smart.html">
+      <h3>🧠 Я.Маркет × CSV сайта — Smart-склейка</h3>
+      <p>Склеивает результат сводки М1↔М2 с CSV сайта по артикулу М2.
+         Два прохода: точный и smart.</p>
+      <span class="tag">Я.Маркет · склейка</span>
+    </a>
 
   </div>
 
