@@ -150,7 +150,8 @@
   <div class="warn">
     🔒 Всё считается прямо в браузере. Файлы никуда не отправляются.<br>
     🎯 Лист второго файла определяется <b>автоматически</b> — по наличию колонки <code>SKU</code>.<br>
-    📊 Порог схожести названий — <b>настраивается</b> (по умолчанию 70 %).
+    📊 Порог схожести названий — <b>настраивается</b> (по умолчанию 70 %).<br>
+    💰 В колонку <b>«Цена (сайт)»</b> идёт <b>«Зачеркнутая цена»</b> из CSV сайта.
   </div>
 
   <div class="howto-box">
@@ -161,7 +162,7 @@
     </ol>
     <p style="margin-top:10px;">
       💡 Колонки ищутся по синонимам: <code>Наименование</code>, <code>Код артикула</code>,
-      <code>Цена</code>, <code>SKU</code>, <code>Название товара</code>.
+      <code>Зачеркнутая цена</code>, <code>SKU</code>, <code>Название товара</code>.
     </p>
   </div>
 
@@ -266,10 +267,11 @@
 
   // ===== Синонимы колонок =====
   const SITE_SYN = {
-    name:  ['наименование', 'название', 'название товара'],
-    code:  ['код артикула', 'наименование артикула', 'артикул'],
-    idArt: ['id артикула', 'id статьи'],
-    price: ['цена'],
+    name:     ['наименование', 'название', 'название товара'],
+    code:     ['код артикула', 'наименование артикула', 'артикул'],
+    idArt:    ['id артикула', 'id статьи'],
+    price:    ['цена'],
+    oldprice: ['зачеркнутая цена', 'зачёркнутая цена', 'старая цена'],
   };
 
   const M2_SYN = {
@@ -501,7 +503,7 @@
     }
     if (headerIdx === -1) return null;
 
-    const found = findHeaderAndCols(rows, ['name','code','idArt','price'], SITE_SYN);
+    const found = findHeaderAndCols(rows, ['name','code','idArt','price','oldprice'], SITE_SYN);
     return { rowIdx: headerIdx, cols: found.cols, data: rows };
   }
 
@@ -553,7 +555,7 @@
       if (!found.cols.name || found.cols.name.idx === -1) continue;
 
       // Считаем: SKU + название обязательно, цена — бонус
-      let score = 2; // SKU + name
+      let score = 2;
       if (found.cols.price && found.cols.price.idx !== -1) score++;
 
       if (!best || score > best.score) {
@@ -581,6 +583,7 @@
     const minNameLen = parseInt($('minNameLen').value) || 15;
     log('Порог схожести: ' + thresholdPct + ' %');
     log('Мин. длина названия: ' + minNameLen + ' символов');
+    log('В колонку «Цена (сайт)» идёт «Зачеркнутая цена» из CSV.');
 
     // ==== 1. CSV сайта ====
     log('');
@@ -589,15 +592,17 @@
     if (!site) { log('❌ Не найдена шапка CSV сайта.'); return; }
     log('→ Шапка в строке ' + (site.rowIdx + 1));
 
-    const sKeys = ['name','code','idArt','price'];
+    const sKeys = ['name','code','idArt','price','oldprice'];
     const sLabels = {
       name: 'Наименование', code: 'Код артикула',
       idArt: 'ID артикула', price: 'Цена',
+      oldprice: 'Зачеркнутая цена (идёт в итог)',
     };
     for (const k of sKeys) {
       const c = site.cols[k];
       if (!c || c.idx === -1) log('  ❌ ' + sLabels[k] + ' — не найдена');
-      else log('  ✅ ' + sLabels[k] + ' — колонка ' + colLetter(c.idx));
+      else log('  ✅ ' + sLabels[k] + ' — колонка ' + colLetter(c.idx) +
+        ' («' + c.matchedBy + '»)');
     }
 
     if (!site.cols.name || site.cols.name.idx === -1) {
@@ -605,6 +610,9 @@
     }
     if (!site.cols.code || site.cols.code.idx === -1) {
       log('❌ На сайте не найден «Код артикула».'); return;
+    }
+    if (!site.cols.oldprice || site.cols.oldprice.idx === -1) {
+      log('⚠️ На сайте не найдена «Зачеркнутая цена» — колонка «Цена (сайт)» будет пустой.');
     }
 
     const siteItems = [];
@@ -616,11 +624,14 @@
 
       const idArt = site.cols.idArt && site.cols.idArt.idx !== -1
         ? toStr(row[site.cols.idArt.idx]) : '';
-      const price = site.cols.price && site.cols.price.idx !== -1
-        ? toStr(row[site.cols.price.idx]) : '';
+
+      // ⚠️ ВАЖНО: в итог идёт ЗАЧЁРКНУТАЯ цена из CSV
+      const oldprice = site.cols.oldprice && site.cols.oldprice.idx !== -1
+        ? toStr(row[site.cols.oldprice.idx]) : '';
 
       siteItems.push({
-        name, code, idArt, price,
+        name, code, idArt,
+        price: oldprice, // ← в колонку «Цена (сайт)» идёт «Зачеркнутая цена»
         nameNorm: normName(name),
       });
     }
@@ -861,7 +872,7 @@
     // Лист 1 — Пары
     const wsLinked = XLSX.utils.aoa_to_sheet([head, ...linked]);
     wsLinked['!cols'] = [
-      {wch:55}, {wch:24}, {wch:12}, {wch:18}, {wch:55}, {wch:12}, {wch:12}, {wch:20},
+      {wch:55}, {wch:24}, {wch:14}, {wch:18}, {wch:55}, {wch:12}, {wch:12}, {wch:20},
     ];
     if (linked.length > 0) {
       wsLinked['!autofilter'] = {
