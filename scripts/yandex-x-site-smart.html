@@ -525,7 +525,6 @@
     const rows = parseCSV(text, delim);
     if (rows.length < 2) return null;
 
-    // Ищем шапку — строку, где есть «Наименование» и «Код артикула»
     let headerIdx = -1;
     for (let r = 0; r < Math.min(10, rows.length); r++) {
       const n = findColBySynonyms(rows[r], SITE_SYN.name);
@@ -538,6 +537,41 @@
     return { rowIdx: headerIdx, cols: found.cols, data: rows };
   }
 
+  // ===== Чтение ВСЕГО диапазона листа (включая пустые строки) =====
+  function sheetToArray(sheet) {
+    const ref = sheet['!ref'];
+    if (!ref) return [];
+    const range = XLSX.utils.decode_range(ref);
+
+    // Если !ref занижен — сканируем вниз, пока не встретим 3 подряд пустые строки
+    let maxRow = Math.max(range.e.r, 5000);
+
+    const rows = [];
+    let emptyStreak = 0;
+
+    for (let R = range.s.r; R <= maxRow; R++) {
+      const row = [];
+      let hasValue = false;
+
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cell = sheet[XLSX.utils.encode_cell({ r: R, c: C })];
+        const v = cell ? (cell.w != null ? cell.w : (cell.v != null ? cell.v : '')) : '';
+        row.push(v);
+        if (v !== '' && v != null) hasValue = true;
+      }
+
+      if (R > range.e.r) {
+        if (hasValue) emptyStreak = 0;
+        else emptyStreak++;
+        if (emptyStreak >= 3) break;
+      }
+
+      rows.push(row);
+    }
+
+    return rows;
+  }
+
   // ===== Парсинг Я.Маркета =====
   function pickYaSheet(wb) {
     const preferred = wb.SheetNames.find(n => normHeader(n) === 'список товаров');
@@ -547,7 +581,7 @@
     let best = null;
     for (const name of names) {
       const sheet = wb.Sheets[name];
-      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+      const data = sheetToArray(sheet);   // ← читаем весь диапазон
       const found = findHeaderAndCols(data, ['sku','name','price','oldprice'], YA_SYN);
       const isPreferred = preferred && name === preferred;
       const score = found.score + (isPreferred ? 1 : 0);
@@ -608,8 +642,6 @@
     for (let i = site.rowIdx + 1; i < site.data.length; i++) {
       const row = site.data[i] || [];
 
-      // ГЛАВНЫЙ ФИЛЬТР: «ID артикула» должно быть числом.
-      // Пустые строки, stocks, category, разделители — отсеиваются здесь.
       const idArt = toStr(row[site.cols.idArt.idx]);
       if (!idArt || !/^\d+$/.test(idArt)) { siteSkipped++; continue; }
 
@@ -636,6 +668,7 @@
     const yaInfo = pickYaSheet(wbYa);
     if (!yaInfo) { log('❌ Не найден лист с «Ваш SKU» и «Название товара».'); return; }
     log('→ Лист «' + yaInfo.name + '», шапка в строке ' + (yaInfo.rowIdx + 1));
+    log('  Строк данных: ' + Math.max(0, yaInfo.data.length - yaInfo.rowIdx - 1));
 
     const yKeys = ['sku','name','price','oldprice'];
     const yLabels = { sku: 'Ваш SKU', name: 'Название товара', price: 'Цена', oldprice: 'Зачёркнутая цена' };
@@ -646,11 +679,19 @@
     }
 
     const yaItems = [];
+    let yaSkipped = 0;
     for (let i = yaInfo.rowIdx + 1; i < yaInfo.data.length; i++) {
       const row = yaInfo.data[i] || [];
       const sku = toStr(row[yaInfo.cols.sku.idx]);
       const name = toStr(row[yaInfo.cols.name.idx]);
-      if (!sku || !name) continue;
+      if (!sku || !name) { yaSkipped++; continue; }
+
+      // Отсекаем строки-описания полей (строка 9 листа):
+      // «Ваш SKU» = «Уникальный идентификатор товара, для которого будет передана цена»
+      const nvSku = normHeader(sku);
+      if (nvSku.startsWith('уникальный идентификатор')) { yaSkipped++; continue; }
+      if (sku.length > 60) { yaSkipped++; continue; }
+
       const price = yaInfo.cols.price && yaInfo.cols.price.idx !== -1 ? toStr(row[yaInfo.cols.price.idx]) : '';
       const oldprice = yaInfo.cols.oldprice && yaInfo.cols.oldprice.idx !== -1 ? toStr(row[yaInfo.cols.oldprice.idx]) : '';
 
@@ -668,7 +709,8 @@
     const ya1 = yaItems.filter(x => x.store === 'M1');
     const ya2 = yaItems.filter(x => x.store === 'M2');
     log('');
-    log('→ Я.Маркет всего: ' + yaItems.length);
+    log('→ Я.Маркет всего: ' + yaItems.length +
+        (yaSkipped ? ' (пропущено служебных строк: ' + yaSkipped + ')' : ''));
     log('   М1 (числовой SKU): ' + ya1.length);
     log('   М2 (буквенный SKU): ' + ya2.length);
 
@@ -682,7 +724,6 @@
     const used2 = new Set();
     const pairs = [];
 
-    // Проход 1 — точное совпадение нормализованных названий
     const m2ByName = new Map();
     for (let j = 0; j < ya2.length; j++) {
       const key = ya2[j].nameNorm;
@@ -703,7 +744,6 @@
     const eqPairsCount = pairs.length;
     log('Проход 1 (точное): ' + eqPairsCount);
 
-    // Проход 2 — нечёткое
     const cands = [];
     for (let i = 0; i < ya1.length; i++) {
       if (used1.has(i)) continue;
@@ -757,7 +797,6 @@
     const usedSite = new Set();
     const resultRowsPairs = [];
 
-    // Проход 1 — точный
     for (const m of merged) {
       const key = m.m2.skuNorm;
       const cands1 = siteByCode1.get(key);
@@ -774,7 +813,6 @@
     let exactLinked = resultRowsPairs.filter(r => r.linkMethod === 'exact').length;
     log('Проход 1 (точный): склеено ' + exactLinked);
 
-    // Проход 2 — smart
     let smartLinked = 0;
     for (const r of resultRowsPairs) {
       if (r.site) continue;
@@ -820,7 +858,6 @@
       ]);
     }
 
-    // Сайт без пары
     let siteOrphans = 0;
     for (let i = 0; i < siteItems.length; i++) {
       if (usedSite.has(i)) continue;
@@ -833,7 +870,6 @@
       siteOrphans++;
     }
 
-    // М2 без пары с М1
     let m2Orphans = 0;
     for (const m of ya2Orphans) {
       resultRows.push([

@@ -354,9 +354,54 @@
     return best;
   }
 
+  // ===== Чтение всего диапазона листа (включая пустые/скрытые строки) =====
+  //
+  // Ключевое отличие от XLSX.utils.sheet_to_json:
+  // sheet_to_json обрывает массив на первой ПОЛНОСТЬЮ пустой строке.
+  // У Яндекс.Маркета между пояснениями (стр. 9) и первым товаром (стр. 11)
+  // лежит пустая строка 10 — из-за этого sheet_to_json возвращал всего 9 строк.
+  //
+  // sheetToArray читает ВЕСЬ диапазон от range.s.r до range.e.r через decode_range,
+  // включая пустые строки. Если !ref в файле не расширен до последней реальной
+  // строки — дополнительно сканируем вниз, пока не встретим 3 подряд пустые строки.
+  function sheetToArray(sheet) {
+    const ref = sheet['!ref'];
+    if (!ref) return [];
+    const range = XLSX.utils.decode_range(ref);
+
+    // Верхняя граница для расширенного сканирования (если !ref занижен).
+    // Пытаемся уйти вниз минимум на 5000 строк.
+    let maxRow = Math.max(range.e.r, 5000);
+
+    const rows = [];
+    let emptyStreak = 0;
+
+    for (let R = range.s.r; R <= maxRow; R++) {
+      const row = [];
+      let hasValue = false;
+
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cell = sheet[XLSX.utils.encode_cell({ r: R, c: C })];
+        const v = cell ? (cell.w != null ? cell.w : (cell.v != null ? cell.v : '')) : '';
+        row.push(v);
+        if (v !== '' && v != null) hasValue = true;
+      }
+
+      // Обнаружили 3 подряд пустые строки за пределами реального !ref — значит, дальше данных нет
+      if (R > range.e.r) {
+        if (hasValue) emptyStreak = 0;
+        else emptyStreak++;
+        if (emptyStreak >= 3) break;
+      }
+
+      rows.push(row);
+    }
+
+    return rows;
+  }
+
   // ===== Выбор листа «Список товаров» =====
   function pickListSheet(wb) {
-    // Приоритет — лист с именем «Список товаров» (или похожим)
     const preferred = wb.SheetNames.find(
       name => normHeader(name) === 'список товаров'
     );
@@ -367,7 +412,7 @@
     let best = null;
     for (const name of names) {
       const sheet = wb.Sheets[name];
-      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+      const data = sheetToArray(sheet);   // ← читаем весь диапазон
       const found = findHeaderAndCols(data, ['sku', 'name', 'price', 'oldprice']);
       const isPreferred = preferred && name === preferred;
       const score = found.score + (isPreferred ? 1 : 0);
@@ -489,8 +534,12 @@
       const price    = cols.price    && cols.price.idx    !== -1 ? toStr(row[cols.price.idx])    : '';
       const oldprice = cols.oldprice && cols.oldprice.idx !== -1 ? toStr(row[cols.oldprice.idx]) : '';
 
-      if (!sku && !name) { skipped++; continue; }
+      // Пропускаем строки-описания полей (см. строку 9 листа):
+      // там «Ваш SKU» = «Уникальный идентификатор товара...» — это не товар.
+      const nvSku = normHeader(sku);
       if (!sku || !name) { skipped++; continue; }
+      if (nvSku.startsWith('уникальный идентификатор')) { skipped++; continue; }
+      if (sku.length > 60) { skipped++; continue; }
 
       const store = isNumericSku(sku) ? 'M1' : 'M2';
       items.push({
