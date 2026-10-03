@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Склейка сайта и второго файла по названию — ALBOMMONET.RU</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" href="data:,">
+<style>
+  .warn {
+    background: #fff1e6; border-left: 4px solid #fc3f1d; padding: 12px 16px;
+    border-radius: 8px; font-size: 14px; margin-bottom: 24px;
+  }
+  .howto-box {
+    background: #fff8f5; border-left: 4px solid #fc3f1d;
+    border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 24px; font-size: 14px; line-height: 1.6;
+  }
+  .howto-box h4 { margin: 0 0 10px; font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .howto-box ol { margin: 8px 0 0 22px; padding: 0; }
+  .howto-box li { margin: 4px 0; }
+  .howto-box code {
+    background: #ffe8e0; color: #8a2400; padding: 2px 6px;
+    border-radius: 4px; font-size: 13px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .step-title {
+    font-size: 17px; font-weight: 700; margin: 28px 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-title .num {
+    display: inline-flex; width: 30px; height: 30px;
+    background: #fc3f1d; color: #fff; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .step-desc {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 14px;
+    padding-left: 40px;
+  }
+  .step-desc b { color: #1a1a1a; }
+  .shop-block {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+    border-left: 5px solid #fc3f1d;
+  }
+  .shop-block.site { border-left-color: #FFC700; }
+  .shop-block h3 {
+    margin: 0 0 4px; font-size: 17px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .shop-block .shop-sub {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 16px;
+  }
+  .drop {
+    border: 2px dashed #c5c5c5; border-radius: 10px;
+    padding: 20px 16px; text-align: center; cursor: pointer;
+    transition: .15s; background: #fafafa; margin-bottom: 10px;
+  }
+  .drop:hover, .drop.hover { border-color: #fc3f1d; background: #fff5f0; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop .icon { font-size: 24px; margin-bottom: 6px; line-height: 1; }
+  .drop .title { font-size: 14px; font-weight: 600; }
+  .drop small { display: block; color: #999; margin-top: 6px; font-size: 12px; }
+  .settings {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .settings h4 { margin: 0 0 14px; font-size: 14px; color: #444; font-weight: 600; }
+  .settings-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .field input {
+    padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; font-family: inherit;
+  }
+  .field input:focus { outline: none; border-color: #fc3f1d; }
+  #log {
+    margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+    white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+    max-height: 420px; overflow-y: auto; display: none;
+  }
+  #log.active { display: block; }
+  #preview { display: none; margin-top: 20px; }
+  #preview.active { display: block; }
+  table.preview { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.preview th, table.preview td {
+    padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left;
+    white-space: nowrap; overflow: hidden; max-width: 260px; text-overflow: ellipsis;
+  }
+  table.preview th { background: #f5f5f5; font-weight: 600; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.4px; }
+  table.preview tr.s-pair { background: #f4fbf7; }
+  table.preview tr.s-orphan-site { background: #fff8e0; }
+  table.preview tr.s-orphan-m2 { background: #eef4ff; }
+  .summary {
+    margin-top: 16px; padding: 14px 18px; background: #f7f9fc;
+    border-radius: 8px; font-size: 14px; line-height: 1.7;
+  }
+  .summary .stat { display: inline-block; margin-right: 20px; }
+  .summary .num { font-weight: 700; color: #fc3f1d; }
+  .summary .stat.pair .num { color: #1e874b; }
+  .summary .stat.site .num { color: #8a6d00; }
+  .summary .stat.m2 .num { color: #3d7bc4; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px;
+    font-size: 12.5px; color: #555;
+  }
+  .legend .li { display: flex; align-items: center; gap: 6px; }
+  .legend .square {
+    display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+  }
+  .legend .sq-pair { background: #c8f1d6; }
+  .legend .sq-orphan-site { background: #ffe8a3; }
+  .legend .sq-orphan-m2 { background: #c7e0ff; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./index.html" class="active">Сравнения</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <a href="./index.html" style="display:inline-block; font-size:13px; color:var(--primary); text-decoration:none; margin-bottom:16px;">← Все скрипты</a>
+
+  <h1 class="page-title">🔀 Склейка сайта × второго файла по названию</h1>
+  <p class="page-lead">
+    Берёт <b>CSV сайта</b> и <b>xlsx</b>, находит лист с колонкой <b>SKU</b>,
+    склеивает позиции <b>по названию</b> с настраиваемым порогом.
+    В итоге — пары «сайт ↔ файл 2» + сироты второго файла.
+  </p>
+
+  <div class="warn">
+    🔒 Всё считается прямо в браузере. Файлы никуда не отправляются.<br>
+    🎯 Лист второго файла определяется <b>автоматически</b> — по наличию колонки <code>SKU</code>.<br>
+    📊 Порог схожести названий — <b>настраивается</b> (по умолчанию 70 %).
+  </div>
+
+  <div class="howto-box">
+    <h4>📋 Что загружаем</h4>
+    <ol>
+      <li><b>CSV сайта ALBOMMONET.RU</b> — эталон.</li>
+      <li><b>xlsx второго файла</b> — скрипт сам найдёт лист с колонкой <code>SKU</code>.</li>
+    </ol>
+    <p style="margin-top:10px;">
+      💡 Колонки ищутся по синонимам: <code>Наименование</code>, <code>Код артикула</code>,
+      <code>Цена</code>, <code>SKU</code>, <code>Название товара</code>.
+    </p>
+  </div>
+
+  <!-- ============ ШАГ 1 ============ -->
+  <div class="step-title">
+    <span class="num">1</span>
+    CSV сайта
+  </div>
+  <div class="step-desc">
+    Свежая выгрузка из админки сайта.
+  </div>
+
+  <div class="shop-block site">
+    <h3>🅰️ CSV сайта ALBOMMONET.RU</h3>
+
+    <div class="drop" id="dropSite">
+      <div class="icon">📁</div>
+      <div class="title">CSV сайта</div>
+      <div id="dropSiteText"><small>📁 .csv или нажмите для выбора</small></div>
+      <input type="file" id="fileSite" accept=".csv,.txt" hidden>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 2 ============ -->
+  <div class="step-title">
+    <span class="num">2</span>
+    Второй файл (xlsx)
+  </div>
+  <div class="step-desc">
+    Любой xlsx с колонкой <b>SKU</b> на одном из листов. Скрипт сам найдёт нужный лист.
+  </div>
+
+  <div class="shop-block">
+    <h3>🅱️ Второй файл</h3>
+    <div class="shop-sub">Скрипт ищет лист с колонкой «SKU»</div>
+
+    <div class="drop" id="dropM2">
+      <div class="icon">📊</div>
+      <div class="title">xlsx второго файла</div>
+      <div id="dropM2Text"><small>📁 .xlsx или нажмите для выбора</small></div>
+      <input type="file" id="fileM2" accept=".xls,.xlsx" hidden>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 3 ============ -->
+  <div class="step-title">
+    <span class="num">3</span>
+    Настройки
+  </div>
+
+  <div class="settings">
+    <h4>Порог схожести названий</h4>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Порог, % (30 – 100)</label>
+        <input type="text" id="threshold" value="70" maxlength="3">
+      </div>
+      <div class="field">
+        <label>Мин. длина названия для склейки</label>
+        <input type="text" id="minNameLen" value="15" maxlength="3">
+      </div>
+    </div>
+  </div>
+
+  <button id="runBtn" class="btn" disabled style="background:#fc3f1d;color:#fff;">▶ Склеить и скачать</button>
+
+  <div id="log"></div>
+
+  <div id="preview">
+    <h3 style="margin-bottom:12px;">Предпросмотр (первые 40 строк)</h3>
+    <div style="overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px;">
+      <table class="preview" id="previewTable"></table>
+    </div>
+    <div class="legend">
+      <div class="li"><span class="square sq-pair"></span> Пара (сайт ↔ файл 2)</div>
+      <div class="li"><span class="square sq-orphan-site"></span> Сайт без пары</div>
+      <div class="li"><span class="square sq-orphan-m2"></span> Файл 2 без пары (сирота)</div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div style="margin-top:16px;">
+      <button id="downloadBtn" class="btn" style="background:#fc3f1d;color:#fff;">⬇️ Скачать полный результат (xlsx)</button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+
+  let csvSiteText = '';
+  let wbM2 = null;
+  let resultRows = [];
+
+  // ===== Синонимы колонок =====
+  const SITE_SYN = {
+    name:  ['наименование', 'название', 'название товара'],
+    code:  ['код артикула', 'наименование артикула', 'артикул'],
+    idArt: ['id артикула', 'id статьи'],
+    price: ['цена'],
+  };
+
+  const M2_SYN = {
+    sku:   ['sku', 'ваш sku', 'артикул', 'артикул продавца'],
+    name:  ['название товара', 'наименование', 'название'],
+    price: ['цена'],
+  };
+
+  // ===== Утилиты =====
+  function log(msg, clear) {
+    if (clear) logEl.textContent = '';
+    logEl.textContent += msg + '\n';
+    logEl.classList.add('active');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function normHeader(s) {
+    return String(s == null ? '' : s)
+      .replace(/^\uFEFF/, '')
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[\s\u00a0\u200b]+/g, ' ')
+      .replace(/[.,;:!?()[\]{}«»"'`*]/g, '')
+      .trim();
+  }
+
+  function normName(s) {
+    let t = String(s == null ? '' : s).toLowerCase();
+    t = t.replace(/^\uFEFF/, '');
+    t = t.replace(/ё/g, 'е').replace(/й/g, 'и');
+    t = t.replace(/[–—−]/g, '-');
+    t = t.replace(/[.,;:!?()[\]{}«»"'`\\/|_\-+*=<>@#$%^&~]/g, ' ');
+    t = t.replace(/[\s\u00a0\u200b]+/g, ' ').trim();
+    return t;
+  }
+
+  function toStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v.trim();
+    return String(v).trim();
+  }
+
+  function similarity(a, b) {
+    a = String(a || ''); b = String(b || '');
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+    if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
+    const bigrams = s => {
+      const set = new Set();
+      for (let i = 0; i < s.length - 1; i++) set.add(s.substr(i, 2));
+      return set;
+    };
+    const A = bigrams(a), B = bigrams(b);
+    let inter = 0;
+    for (const g of A) if (B.has(g)) inter++;
+    const dice = 2 * inter / (A.size + B.size);
+    const lenRatio = Math.min(a.length, b.length) / Math.max(a.length, b.length);
+    return dice * 0.85 + lenRatio * 0.15;
+  }
+
+  function colLetter(idx) {
+    let letter = '', n = idx;
+    while (n >= 0) {
+      letter = String.fromCharCode((n % 26) + 65) + letter;
+      n = Math.floor(n / 26) - 1;
+    }
+    return letter;
+  }
+
+  function findColBySynonyms(headerRow, synonyms) {
+    const norm = headerRow.map(normHeader);
+    for (const syn of synonyms) {
+      const target = normHeader(syn);
+      let idx = norm.findIndex(h => h === target);
+      if (idx !== -1) return { idx, matchedBy: syn };
+      idx = norm.findIndex(h => h.includes(target));
+      if (idx !== -1) return { idx, matchedBy: syn };
+    }
+    return { idx: -1, matchedBy: null };
+  }
+
+  function findHeaderAndCols(data, wantedKeys, synMap) {
+    let best = { rowIdx: -1, cols: null, score: -1 };
+    for (let r = 0; r < Math.min(20, data.length); r++) {
+      const row = data[r] || [];
+      const cols = {};
+      let score = 0;
+      for (const key of wantedKeys) {
+        const found = findColBySynonyms(row, synMap[key] || []);
+        cols[key] = found;
+        if (found.idx !== -1) score++;
+      }
+      if (score > best.score) best = { rowIdx: r, cols, score };
+    }
+    return best;
+  }
+
+  // ===== CSV-парсер =====
+  function detectDelimiter(text) {
+    const firstLine = text.split(/\r?\n/)[0] || '';
+    const counts = {
+      ';': (firstLine.match(/;/g) || []).length,
+      ',': (firstLine.match(/,/g) || []).length,
+      '\t': (firstLine.match(/\t/g) || []).length,
+      '|': (firstLine.match(/\|/g) || []).length,
+    };
+    let best = ';', max = 0;
+    for (const k of Object.keys(counts)) {
+      if (counts[k] > max) { max = counts[k]; best = k; }
+    }
+    return best;
+  }
+
+  function parseCSV(text, delim) {
+    const rows = [];
+    let row = [], field = '', inQuotes = false, i = 0;
+    while (i < text.length) {
+      const ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+          inQuotes = false; i++; continue;
+        }
+        field += ch; i++;
+      } else {
+        if (ch === '"') { inQuotes = true; i++; continue; }
+        if (ch === delim) { row.push(field); field = ''; i++; continue; }
+        if (ch === '\r') { i++; continue; }
+        if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+        field += ch; i++;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  // ===== Загрузка =====
+  function wireDropCsv(dropId, inputId, cb) {
+    const drop = $(dropId), input = $(inputId);
+    drop.onclick = () => input.click();
+    input.onchange = e => { if (e.target.files[0]) readCsv(e.target.files[0], cb); };
+    ['dragover','dragleave','drop'].forEach(ev => {
+      drop.addEventListener(ev, e => {
+        e.preventDefault();
+        if (ev === 'dragover') drop.classList.add('hover');
+        if (ev === 'dragleave') drop.classList.remove('hover');
+        if (ev === 'drop') {
+          drop.classList.remove('hover');
+          if (e.dataTransfer.files[0]) readCsv(e.dataTransfer.files[0], cb);
+        }
+      });
+    });
+  }
+
+  function readCsv(file, cb) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const buf = ev.target.result;
+        let text = new TextDecoder('utf-8').decode(buf);
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        cb(text, file.name);
+      } catch (err) { log('❌ Ошибка чтения: ' + err.message); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function wireDropXlsx(dropId, inputId, cb) {
+    const drop = $(dropId), input = $(inputId);
+    drop.onclick = () => input.click();
+    input.onchange = e => { if (e.target.files[0]) readXlsx(e.target.files[0], cb); };
+    ['dragover','dragleave','drop'].forEach(ev => {
+      drop.addEventListener(ev, e => {
+        e.preventDefault();
+        if (ev === 'dragover') drop.classList.add('hover');
+        if (ev === 'dragleave') drop.classList.remove('hover');
+        if (ev === 'drop') {
+          drop.classList.remove('hover');
+          if (e.dataTransfer.files[0]) readXlsx(e.dataTransfer.files[0], cb);
+        }
+      });
+    });
+  }
+
+  function readXlsx(file, cb) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type: 'array' });
+        cb(wb, file.name);
+      } catch (err) { log('❌ Ошибка чтения: ' + err.message); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  wireDropCsv('dropSite', 'fileSite', (text, name) => {
+    csvSiteText = text;
+    $('dropSite').classList.add('done');
+    $('dropSiteText').innerHTML = '✅ <b>' + name + '</b>';
+    log('🅰️ CSV сайта: ' + name, true);
+    updateBtn();
+  });
+
+  wireDropXlsx('dropM2', 'fileM2', (wb, name) => {
+    wbM2 = wb;
+    $('dropM2').classList.add('done');
+    $('dropM2Text').innerHTML = '✅ <b>' + name + '</b><br><small>Листы: ' +
+      wb.SheetNames.join(', ') + '</small>';
+    log('🅱️ Второй файл: ' + name);
+    log('  Листы: ' + wb.SheetNames.join(', '));
+    updateBtn();
+  });
+
+  function updateBtn() {
+    $('runBtn').disabled = !(csvSiteText && wbM2);
+  }
+
+  // ===== Парсинг CSV сайта =====
+  function parseSiteCsv(text) {
+    const delim = detectDelimiter(text);
+    const rows = parseCSV(text, delim);
+    if (rows.length < 2) return null;
+
+    let headerIdx = -1;
+    for (let r = 0; r < Math.min(10, rows.length); r++) {
+      const n = findColBySynonyms(rows[r], SITE_SYN.name);
+      const c = findColBySynonyms(rows[r], SITE_SYN.code);
+      if (n.idx !== -1 && c.idx !== -1) { headerIdx = r; break; }
+    }
+    if (headerIdx === -1) return null;
+
+    const found = findHeaderAndCols(rows, ['name','code','idArt','price'], SITE_SYN);
+    return { rowIdx: headerIdx, cols: found.cols, data: rows };
+  }
+
+  // ===== Чтение всего листа xlsx =====
+  function sheetToArray(sheet) {
+    const ref = sheet['!ref'];
+    if (!ref) return [];
+    const range = XLSX.utils.decode_range(ref);
+    let maxRow = Math.max(range.e.r, 5000);
+
+    const rows = [];
+    let emptyStreak = 0;
+    for (let R = range.s.r; R <= maxRow; R++) {
+      const row = [];
+      let hasValue = false;
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cell = sheet[XLSX.utils.encode_cell({ r: R, c: C })];
+        const v = cell ? (cell.w != null ? cell.w : (cell.v != null ? cell.v : '')) : '';
+        row.push(v);
+        if (v !== '' && v != null) hasValue = true;
+      }
+      if (R > range.e.r) {
+        if (hasValue) emptyStreak = 0;
+        else emptyStreak++;
+        if (emptyStreak >= 3) break;
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  // =========================================================
+  //  ПОИСК ЛИСТА С КОЛОНКОЙ «SKU»
+  //  Перебираем все листы. На каждом ищем шапку с «SKU».
+  //  Побеждает лист, где найдено больше всего колонок.
+  // =========================================================
+  function pickM2Sheet(wb) {
+    let best = null;
+    for (const sheetName of wb.SheetNames) {
+      const sheet = wb.Sheets[sheetName];
+      const data = sheetToArray(sheet);
+      if (!data.length) continue;
+
+      const found = findHeaderAndCols(data, ['sku', 'name', 'price'], M2_SYN);
+
+      // Обязательное условие: есть колонка SKU
+      if (!found.cols.sku || found.cols.sku.idx === -1) continue;
+      // Обязательно: есть название
+      if (!found.cols.name || found.cols.name.idx === -1) continue;
+
+      // Считаем: SKU + название обязательно, цена — бонус
+      let score = 2; // SKU + name
+      if (found.cols.price && found.cols.price.idx !== -1) score++;
+
+      if (!best || score > best.score) {
+        best = {
+          name: sheetName,
+          score,
+          rowIdx: found.rowIdx,
+          cols: found.cols,
+          data,
+        };
+      }
+    }
+    return best;
+  }
+
+  // ===== Главная обработка =====
+  $('runBtn').onclick = () => {
+    if (!(csvSiteText && wbM2)) return;
+
+    log('', true);
+    log('=== Склейка сайта × второго файла по названию ===');
+
+    const thresholdPct = parseFloat($('threshold').value) || 70;
+    const threshold = Math.max(0.3, Math.min(1, thresholdPct / 100));
+    const minNameLen = parseInt($('minNameLen').value) || 15;
+    log('Порог схожести: ' + thresholdPct + ' %');
+    log('Мин. длина названия: ' + minNameLen + ' символов');
+
+    // ==== 1. CSV сайта ====
+    log('');
+    log('🅰️ CSV сайта');
+    const site = parseSiteCsv(csvSiteText);
+    if (!site) { log('❌ Не найдена шапка CSV сайта.'); return; }
+    log('→ Шапка в строке ' + (site.rowIdx + 1));
+
+    const sKeys = ['name','code','idArt','price'];
+    const sLabels = {
+      name: 'Наименование', code: 'Код артикула',
+      idArt: 'ID артикула', price: 'Цена',
+    };
+    for (const k of sKeys) {
+      const c = site.cols[k];
+      if (!c || c.idx === -1) log('  ❌ ' + sLabels[k] + ' — не найдена');
+      else log('  ✅ ' + sLabels[k] + ' — колонка ' + colLetter(c.idx));
+    }
+
+    if (!site.cols.name || site.cols.name.idx === -1) {
+      log('❌ На сайте не найдено «Наименование».'); return;
+    }
+    if (!site.cols.code || site.cols.code.idx === -1) {
+      log('❌ На сайте не найден «Код артикула».'); return;
+    }
+
+    const siteItems = [];
+    for (let i = site.rowIdx + 1; i < site.data.length; i++) {
+      const row = site.data[i] || [];
+      const name = toStr(row[site.cols.name.idx]);
+      const code = toStr(row[site.cols.code.idx]);
+      if (!name || !code) continue;
+
+      const idArt = site.cols.idArt && site.cols.idArt.idx !== -1
+        ? toStr(row[site.cols.idArt.idx]) : '';
+      const price = site.cols.price && site.cols.price.idx !== -1
+        ? toStr(row[site.cols.price.idx]) : '';
+
+      siteItems.push({
+        name, code, idArt, price,
+        nameNorm: normName(name),
+      });
+    }
+    log('');
+    log('→ Позиций сайта: ' + siteItems.length);
+
+    // ==== 2. Второй файл — ищем лист с SKU ====
+    log('');
+    log('🅱️ Второй файл — ищу лист с колонкой «SKU»...');
+    const m2Info = pickM2Sheet(wbM2);
+    if (!m2Info) {
+      log('❌ Ни на одном листе не найдена колонка «SKU».');
+      log('   Доступные листы: ' + wbM2.SheetNames.join(' | '));
+      return;
+    }
+    log('→ Найден лист «' + m2Info.name + '», шапка в строке ' +
+        (m2Info.rowIdx + 1));
+
+    const m2Keys = ['sku','name','price'];
+    const m2Labels = { sku: 'SKU', name: 'Название товара', price: 'Цена' };
+    for (const k of m2Keys) {
+      const c = m2Info.cols[k];
+      if (!c || c.idx === -1) log('  ❌ ' + m2Labels[k] + ' — не найдена');
+      else log('  ✅ ' + m2Labels[k] + ' — колонка ' + colLetter(c.idx) +
+        ' («' + c.matchedBy + '»)');
+    }
+
+    const m2Items = [];
+    let m2Skipped = 0;
+    for (let i = m2Info.rowIdx + 1; i < m2Info.data.length; i++) {
+      const row = m2Info.data[i] || [];
+      const sku = toStr(row[m2Info.cols.sku.idx]);
+      const name = toStr(row[m2Info.cols.name.idx]);
+      if (!sku || !name) { m2Skipped++; continue; }
+
+      // Пропускаем строки-описания полей
+      const nvSku = normHeader(sku);
+      if (nvSku.startsWith('уникальный идентификатор')) { m2Skipped++; continue; }
+      if (sku.length > 60) { m2Skipped++; continue; }
+
+      const price = m2Info.cols.price && m2Info.cols.price.idx !== -1
+        ? toStr(row[m2Info.cols.price.idx]) : '';
+
+      m2Items.push({
+        sku, name, price,
+        nameNorm: normName(name),
+      });
+    }
+    log('');
+    log('→ Позиций второго файла: ' + m2Items.length +
+        (m2Skipped ? ' (пропущено служебных: ' + m2Skipped + ')' : ''));
+
+    if (!siteItems.length || !m2Items.length) {
+      log('❌ Один из файлов пуст.');
+      return;
+    }
+
+    // ==== 3. Склейка по названию ====
+    log('');
+    log('=== Склейка по названию ===');
+
+    // Проход 1: точное совпадение нормализованных названий
+    const usedM2 = new Set();
+    const usedSite = new Set();
+    const pairs = [];
+
+    const m2ByNameExact = new Map();
+    for (let j = 0; j < m2Items.length; j++) {
+      const k = m2Items[j].nameNorm;
+      if (!k) continue;
+      if (!m2ByNameExact.has(k)) m2ByNameExact.set(k, []);
+      m2ByNameExact.get(k).push(j);
+    }
+
+    for (let i = 0; i < siteItems.length; i++) {
+      const s = siteItems[i];
+      if (!s.nameNorm) continue;
+      const cand = m2ByNameExact.get(s.nameNorm);
+      if (!cand) continue;
+      const j = cand.find(x => !usedM2.has(x));
+      if (j === undefined) continue;
+      usedSite.add(i); usedM2.add(j);
+      pairs.push({ iSite: i, jM2: j, score: 1.0, kind: 'exact' });
+    }
+    const exactCount = pairs.length;
+    log('Проход 1 (точное): ' + exactCount);
+
+    // Проход 2: нечёткое сравнение для оставшихся
+    const cands = [];
+    for (let i = 0; i < siteItems.length; i++) {
+      if (usedSite.has(i)) continue;
+      const s = siteItems[i];
+      if (!s.nameNorm || s.nameNorm.length < minNameLen) continue;
+      for (let j = 0; j < m2Items.length; j++) {
+        if (usedM2.has(j)) continue;
+        const m = m2Items[j];
+        if (!m.nameNorm || m.nameNorm.length < minNameLen) continue;
+        const sc = similarity(s.nameNorm, m.nameNorm);
+        if (sc >= threshold) cands.push({ iSite: i, jM2: j, score: sc });
+      }
+    }
+    cands.sort((x, y) => y.score - x.score);
+    let fuzzyCount = 0;
+    for (const p of cands) {
+      if (usedSite.has(p.iSite) || usedM2.has(p.jM2)) continue;
+      usedSite.add(p.iSite); usedM2.add(p.jM2);
+      pairs.push({ iSite: p.iSite, jM2: p.jM2, score: p.score, kind: 'fuzzy' });
+      fuzzyCount++;
+    }
+    log('Проход 2 (нечёткое, порог ' + thresholdPct + ' %): ' + fuzzyCount);
+    log('Всего пар: ' + pairs.length);
+
+    // ==== 4. Сборка итоговой таблицы ====
+    resultRows = [[
+      'Название (сайт)',
+      'Артикул (сайт)',
+      'Цена (сайт)',
+      'SKU (файл 2)',
+      'Название (файл 2)',
+      'Цена (файл 2)',
+      'Схожесть %',
+      'Статус',
+    ]];
+
+    // Сортируем: сначала точные, потом по убыванию схожести
+    pairs.sort((a, b) => {
+      if (a.kind !== b.kind) {
+        if (a.kind === 'exact' && b.kind === 'fuzzy') return -1;
+        if (a.kind === 'fuzzy' && b.kind === 'exact') return 1;
+      }
+      return b.score - a.score;
+    });
+
+    // Пары
+    for (const p of pairs) {
+      const s = siteItems[p.iSite];
+      const m = m2Items[p.jM2];
+      const statusLabel = p.kind === 'exact'
+        ? '✅ точное'
+        : '📊 по названию';
+      resultRows.push([
+        s.name, s.code, s.price,
+        m.sku, m.name, m.price,
+        Math.round(p.score * 100) + ' %',
+        statusLabel,
+      ]);
+    }
+
+    // Сироты сайта (без пары) — тоже выводим
+    let siteOrphans = 0;
+    for (let i = 0; i < siteItems.length; i++) {
+      if (usedSite.has(i)) continue;
+      const s = siteItems[i];
+      resultRows.push([
+        s.name, s.code, s.price,
+        '', '', '',
+        '', '⚪ сайт без пары',
+      ]);
+      siteOrphans++;
+    }
+
+    // Сироты второго файла (SKU без пары)
+    let m2Orphans = 0;
+    for (let j = 0; j < m2Items.length; j++) {
+      if (usedM2.has(j)) continue;
+      const m = m2Items[j];
+      resultRows.push([
+        '', '', '',
+        m.sku, m.name, m.price,
+        '', '⚪ файл 2 без пары (сирота)',
+      ]);
+      m2Orphans++;
+    }
+
+    log('');
+    log('=== ИТОГО ===');
+    log('  ✅ Точных пар: ' + exactCount);
+    log('  📊 Пар по названию: ' + fuzzyCount);
+    log('  ⚪ Сайт без пары: ' + siteOrphans);
+    log('  ⚪ Файл 2 без пары (сироты): ' + m2Orphans);
+
+    renderPreview(resultRows);
+    renderSummary(siteItems.length, m2Items.length,
+                  exactCount, fuzzyCount, siteOrphans, m2Orphans);
+    $('preview').classList.add('active');
+    log('');
+    log('✅ Готово. Нажмите «Скачать полный результат».');
+  };
+
+  function renderPreview(rows) {
+    const table = $('previewTable');
+    const head = rows[0];
+    const body = rows.slice(1, 41);
+    let html = '<thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
+      '</tr></thead><tbody>';
+    for (const r of body) {
+      const status = String(r[7] || '');
+      let cls = '';
+      if (status.indexOf('точное') !== -1) cls = 's-pair';
+      else if (status.indexOf('по названию') !== -1) cls = 's-pair';
+      else if (status.indexOf('сайт без пары') !== -1) cls = 's-orphan-site';
+      else if (status.indexOf('файл 2 без пары') !== -1) cls = 's-orphan-m2';
+      html += '<tr class="' + cls + '">' +
+        r.map(v => '<td title="' + String(v).replace(/"/g, '&quot;') + '">' +
+          String(v) + '</td>').join('') + '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  function renderSummary(nSite, nM2, nExact, nFuzzy, nSiteOr, nM2Or) {
+    $('summary').innerHTML =
+      '<span class="stat site">Позиций сайта: <span class="num">' + nSite + '</span></span>' +
+      '<span class="stat m2">Позиций файла 2: <span class="num">' + nM2 + '</span></span><br>' +
+      '<span class="stat pair">✅ Точных пар: <span class="num">' + nExact + '</span></span>' +
+      '<span class="stat pair">📊 Пар по названию: <span class="num">' + nFuzzy + '</span></span><br>' +
+      '<span class="stat site">⚪ Сайт без пары: <span class="num">' + nSiteOr + '</span></span>' +
+      '<span class="stat m2">⚪ Файл 2 без пары (сирот): <span class="num">' + nM2Or + '</span></span>';
+  }
+
+  $('downloadBtn').onclick = () => {
+    if (!resultRows.length) return;
+
+    const head = resultRows[0];
+    const body = resultRows.slice(1);
+
+    // Разделяем на пары / сироты
+    const linked = [];
+    const orphansSite = [];
+    const orphansM2 = [];
+    for (const r of body) {
+      const status = String(r[7] || '');
+      if (status.indexOf('точное') !== -1 || status.indexOf('по названию') !== -1) linked.push(r);
+      else if (status.indexOf('сайт без пары') !== -1) orphansSite.push(r);
+      else if (status.indexOf('файл 2 без пары') !== -1) orphansM2.push(r);
+    }
+
+    // Лист 1 — Пары
+    const wsLinked = XLSX.utils.aoa_to_sheet([head, ...linked]);
+    wsLinked['!cols'] = [
+      {wch:55}, {wch:24}, {wch:12}, {wch:18}, {wch:55}, {wch:12}, {wch:12}, {wch:20},
+    ];
+    if (linked.length > 0) {
+      wsLinked['!autofilter'] = {
+        ref: XLSX.utils.encode_range({
+          s: { r: 0, c: 0 },
+          e: { r: linked.length, c: 7 }
+        })
+      };
+    }
+
+    // Лист 2 — Сайт без пары
+    const wsOrphSite = XLSX.utils.aoa_to_sheet([head, ...orphansSite]);
+    wsOrphSite['!cols'] = wsLinked['!cols'];
+    if (orphansSite.length > 0) {
+      wsOrphSite['!autofilter'] = {
+        ref: XLSX.utils.encode_range({
+          s: { r: 0, c: 0 },
+          e: { r: orphansSite.length, c: 7 }
+        })
+      };
+    }
+
+    // Лист 3 — Файл 2 без пары (сироты)
+    const wsOrphM2 = XLSX.utils.aoa_to_sheet([head, ...orphansM2]);
+    wsOrphM2['!cols'] = wsLinked['!cols'];
+    if (orphansM2.length > 0) {
+      wsOrphM2['!autofilter'] = {
+        ref: XLSX.utils.encode_range({
+          s: { r: 0, c: 0 },
+          e: { r: orphansM2.length, c: 7 }
+        })
+      };
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, wsLinked, 'Пары');
+    XLSX.utils.book_append_sheet(wb, wsOrphSite, 'Сайт без пары');
+    XLSX.utils.book_append_sheet(wb, wsOrphM2, 'Файл2 сироты');
+
+    const outName = 'site_x_file2_by_name_' +
+      new Date().toISOString().slice(0,10) + '.xlsx';
+    XLSX.writeFile(wb, outName);
+    log('✅ Скачан: ' + outName);
+    log('   · лист «Пары»: ' + linked.length + ' строк');
+    log('   · лист «Сайт без пары»: ' + orphansSite.length + ' строк');
+    log('   · лист «Файл2 сироты»: ' + orphansM2.length + ' строк');
+  };
+
+})();
+</script>
+</body>
+</html>
