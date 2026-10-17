@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Яндекс.Маркет — выгрузка цен</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" href="data:,">
+<style>
+  .warn {
+    background: #fff8e0; border-left: 4px solid #FFC700; padding: 12px 16px;
+    border-radius: 8px; font-size: 14px; margin-bottom: 24px;
+  }
+  .howto-box {
+    background: #f0f7ff; border-left: 4px solid #4a90e2;
+    border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 24px; font-size: 14px; line-height: 1.6;
+  }
+  .howto-box h4 { margin: 0 0 10px; font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .howto-box ol { margin: 8px 0 0 22px; padding: 0; }
+  .howto-box li { margin: 4px 0; }
+  .howto-box code {
+    background: #dcebfd; color: #1a4b85; padding: 2px 6px;
+    border-radius: 4px; font-size: 13px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+
+  .step-title {
+    font-size: 17px; font-weight: 700; margin: 28px 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-title .num {
+    display: inline-flex; width: 30px; height: 30px;
+    background: #fc0; color: #1a1a1a; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 15px;
+    font-weight: 700; flex-shrink: 0;
+  }
+  .step-desc {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 14px;
+    padding-left: 40px;
+  }
+  .step-desc b { color: #1a1a1a; }
+
+  .shop-block {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+    border-left: 5px solid #fc0;
+  }
+  .shop-block h3 {
+    margin: 0 0 4px; font-size: 17px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .shop-block .shop-sub {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 16px;
+  }
+  .shop-block .num-circle {
+    display: inline-flex; width: 28px; height: 28px;
+    background: #fc0; color: #1a1a1a; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 14px;
+    font-weight: 700; flex-shrink: 0;
+  }
+
+  .drop {
+    border: 2px dashed #c5c5c5; border-radius: 10px;
+    padding: 20px 16px; text-align: center; cursor: pointer;
+    transition: .15s; background: #fafafa; margin-bottom: 10px;
+  }
+  .drop:hover, .drop.hover { border-color: #fc0; background: #fffbe6; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop .icon { font-size: 24px; margin-bottom: 6px; line-height: 1; }
+  .drop .title { font-size: 14px; font-weight: 600; }
+  .drop small { display: block; color: #999; margin-top: 6px; font-size: 12px; }
+
+  #log {
+    margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+    white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+    max-height: 420px; overflow-y: auto; display: none;
+  }
+  #log.active { display: block; }
+
+  #preview { display: none; margin-top: 20px; }
+  #preview.active { display: block; }
+  table.preview { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.preview th, table.preview td {
+    padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left;
+    white-space: nowrap; overflow: hidden; max-width: 260px; text-overflow: ellipsis;
+  }
+  table.preview th { background: #f5f5f5; font-weight: 600; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.4px; }
+  table.preview tr.s-num { background: #fffbe6; }
+  table.preview tr.s-sym { background: #f0f7ff; }
+
+  .summary {
+    margin-top: 16px; padding: 14px 18px; background: #f7f9fc;
+    border-radius: 8px; font-size: 14px; line-height: 1.7;
+  }
+  .summary .stat { display: inline-block; margin-right: 20px; }
+  .summary .num { font-weight: 700; color: #005bff; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px;
+    font-size: 12.5px; color: #555;
+  }
+  .legend .li { display: flex; align-items: center; gap: 6px; }
+  .legend .square {
+    display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+  }
+  .legend .sq-num { background: #ffe8a3; }
+  .legend .sq-sym { background: #c8dff5; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./index.html" class="active">Сравнения</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <a href="./index.html" style="display:inline-block; font-size:13px; color:var(--primary); text-decoration:none; margin-bottom:16px;">← Все скрипты</a>
+
+  <h1 class="page-title">🟡 Яндекс.Маркет — выгрузка цен</h1>
+  
+  <div class="howto-box">
+    <h4>📋 Что делает скрипт</h4>
+    <ol>
+      <li>Читает данные из xlsx (там уже посчитаны формулы: Цена, Зачёркнутая, Минимум, Себестоимость).</li>
+      <li><b>Числовые SKU</b> (только цифры, например <code>100</code>, <code>4627176180655</code>) — идут первыми, без изменений.</li>
+      <li><b>Символьные SKU</b> (буквы, дефисы, например <code>A-KB</code>, <code>LB1-10</code>, <code>А-М_А4/Розовый</code>) — идут после числовых, с суффиксом <code>/НТ</code> в конце.</li>
+      <li>Собирает итоговую таблицу с 7 колонками шаблона Я.Маркета.</li>
+      <li>Скачивает <code>xlsx</code> с автофильтром и настроенной шириной колонок.</li>
+    </ol>
+  </div>
+
+  <!-- ============ ШАГ 1 ============ -->
+  <div class="shop-block">
+    <h3><span class="num-circle">Я</span> Яндекс.Маркет</h3>
+    <div class="shop-sub">Файл с формулами цен</div>
+
+    <div class="drop" id="dropFile">
+      <div class="icon">🟡</div>
+      <div class="title">ГРУЗИ СЮДА</div>
+      <div id="dropFileText"><small>📁 .xlsx или нажмите для выбора</small></div>
+      <input type="file" id="fileInput" accept=".xls,.xlsx" hidden>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 2 ============ -->
+  <div class="step-title">
+    <span class="num">2</span>
+    СОБРАТЬ
+  </div>
+
+  <button id="runBtn" class="btn" disabled style="background:#fc0; color:#1a1a1a;">▶ Собрать и скачать</button>
+
+  <div id="log"></div>
+
+  <div id="preview">
+    <h3 style="margin-bottom:12px;">Предпросмотр (первые 30 строк)</h3>
+    <div style="overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px;">
+      <table class="preview" id="previewTable"></table>
+    </div>
+    <div class="legend">
+      <div class="li"><span class="square sq-num"></span> Числовые SKU (без изменений)</div>
+      <div class="li"><span class="square sq-sym"></span> Символьные SKU (+ /НТ)</div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div style="margin-top:16px;">
+      <button id="downloadBtn" class="btn" style="background:#fc0; color:#1a1a1a;">⬇️ Скачать результат (xlsx)</button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+
+  let wbInput = null;
+  let resultRows = [];
+
+  // ===== Утилиты =====
+  function log(msg, clear) {
+    if (clear) logEl.textContent = '';
+    logEl.textContent += msg + '\n';
+    logEl.classList.add('active');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function toStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v.trim();
+    return String(v).trim();
+  }
+
+  // SKU числовой = только цифры
+  function isNumericSku(sku) {
+    return /^\d+$/.test(String(sku || '').trim());
+  }
+
+  // Число: округляем до целого, NaN → пусто
+  function numOrEmpty(v) {
+    const s = toStr(v);
+    if (!s) return '';
+    // Убираем пробелы-разделители тысяч, заменяем запятую на точку
+    const cleaned = s.replace(/\s/g, '').replace(',', '.');
+    const n = parseFloat(cleaned);
+    if (!isFinite(n)) return '';
+    return Math.round(n);
+  }
+
+  // ===== Загрузка файла =====
+  function wireDrop(dropId, inputId, cb) {
+    const drop = $(dropId), input = $(inputId);
+    drop.onclick = () => input.click();
+    input.onchange = e => { if (e.target.files[0]) readFile(e.target.files[0], cb); };
+    ['dragover','dragleave','drop'].forEach(ev => {
+      drop.addEventListener(ev, e => {
+        e.preventDefault();
+        if (ev === 'dragover') drop.classList.add('hover');
+        if (ev === 'dragleave') drop.classList.remove('hover');
+        if (ev === 'drop') {
+          drop.classList.remove('hover');
+          if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0], cb);
+        }
+      });
+    });
+  }
+
+  function readFile(file, cb) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        cb(wb, file.name);
+      } catch (err) {
+        log('❌ Ошибка чтения: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  wireDrop('dropFile', 'fileInput', (wb, name) => {
+    wbInput = wb;
+    $('dropFile').classList.add('done');
+    $('dropFileText').innerHTML = '✅ <b>' + name + '</b><br><small>Листы: ' +
+      wb.SheetNames.join(', ') + '</small>';
+    log('🟡 Файл: ' + name, true);
+    log('  Листы: ' + wb.SheetNames.join(', '));
+    updateBtn();
+  });
+
+  function updateBtn() {
+    $('runBtn').disabled = !wbInput;
+  }
+
+  // ===== Поиск листа Лист1 (или первого похожего) =====
+  function pickSheet(wb) {
+    // Приоритет: точное совпадение с «Лист1»
+    if (wb.SheetNames.includes('Лист1')) return 'Лист1';
+    // Иначе — первый лист
+    return wb.SheetNames[0];
+  }
+
+  // ===== ГЛАВНАЯ ОБРАБОТКА =====
+  $('runBtn').onclick = () => {
+    if (!wbInput) return;
+
+    log('', true);
+    log('=== Яндекс.Маркет: сборка файла загрузки ===');
+
+    const sheetName = pickSheet(wbInput);
+    log('Лист: «' + sheetName + '»');
+
+    const sheet = wbInput.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(sheet, {
+      header: 1, defval: '', raw: false
+    });
+
+    if (data.length < 2) {
+      log('❌ Лист пустой.');
+      return;
+    }
+
+    // Шапка в первой строке
+    const header = data[0].map(v => toStr(v));
+    log('Шапка: ' + header.slice(0, 7).join(' | '));
+
+    // Ожидаемые колонки (как в Лист1)
+    // A: Ваш SKU *
+    // B: Название товара
+    // C: ЦЕНА НАШЕГО САЙТА
+    // D: Себестоимость
+    // E: Минимум для акции
+    // F: Цена *
+    // G: Зачёркнутая цена
+    // Ищем по синонимам, но с fallback на позицию
+    function findCol(names, fallbackIdx) {
+      for (const n of names) {
+        const target = n.toLowerCase().replace(/ё/g, 'е').trim();
+        for (let i = 0; i < header.length; i++) {
+          const h = header[i].toLowerCase().replace(/ё/g, 'е').trim();
+          if (h === target || h.includes(target)) return i;
+        }
+      }
+      return fallbackIdx;
+    }
+
+    const colSku   = findCol(['ваш sku', 'sku', 'артикул'], 0);
+    const colName  = findCol(['название товара', 'наименование', 'название'], 1);
+    const colPrice = findCol(['цена *', 'цена'], 5);              // F
+    const colOld   = findCol(['зачёркнутая цена', 'зачеркнутая цена'], 6); // G
+    const colMin   = findCol(['минимум для акции', 'минимум'], 4); // E
+    const colCost  = findCol(['себестоимость'], 3);               // D
+
+    log('Колонки:');
+    log('  SKU        → ' + colSku + ' («' + (header[colSku] || '') + '»)');
+    log('  Название   → ' + colName + ' («' + (header[colName] || '') + '»)');
+    log('  Цена *     → ' + colPrice + ' («' + (header[colPrice] || '') + '»)');
+    log('  Зачёркнутая→ ' + colOld + ' («' + (header[colOld] || '') + '»)');
+    log('  Минимум    → ' + colMin + ' («' + (header[colMin] || '') + '»)');
+    log('  Себестоим. → ' + colCost + ' («' + (header[colCost] || '') + '»)');
+
+    // ==== Парсинг строк ====
+    const allItems = [];
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i] || [];
+      const sku = toStr(row[colSku]);
+      if (!sku) continue;
+      const name = toStr(row[colName]);
+      const price = numOrEmpty(row[colPrice]);
+      const oldPrice = numOrEmpty(row[colOld]);
+      const minPrice = numOrEmpty(row[colMin]);
+      const cost = numOrEmpty(row[colCost]);
+
+      allItems.push({
+        sku, name, price, oldPrice, minPrice, cost,
+        isNum: isNumericSku(sku)
+      });
+    }
+
+    log('');
+    log('Всего позиций с SKU: ' + allItems.length);
+
+    // ==== Разделение ====
+    const numericItems = allItems.filter(it => it.isNum);
+    const symbolicItems = allItems.filter(it => !it.isNum);
+
+    log('  Числовых SKU:   ' + numericItems.length);
+    log('  Символьных SKU: ' + symbolicItems.length + ' (добавляем /НТ)');
+
+    // ==== Сборка итоговой таблицы ====
+    // Порядок колонок:
+    // Ваш SKU * | Название товара | Цена * | Зачёркнутая цена | Минимум для акции | Себестоимость | Дополнительные расходы
+    resultRows = [[
+      'Ваш SKU *',
+      'Название товара',
+      'Цена *',
+      'Зачёркнутая цена',
+      'Минимум для акции',
+      'Себестоимость',
+      'Дополнительные расходы',
+    ]];
+
+    // 1. Числовые SKU — без изменений
+    for (const it of numericItems) {
+      resultRows.push([
+        it.sku, it.name, it.price, it.oldPrice, it.minPrice, it.cost, ''
+      ]);
+    }
+
+    // 2. Символьные SKU — с суффиксом /НТ
+    for (const it of symbolicItems) {
+      resultRows.push([
+        it.sku + '/НТ', it.name, it.price, it.oldPrice, it.minPrice, it.cost, ''
+      ]);
+    }
+
+    log('');
+    log('✅ Итоговых строк (без шапки): ' + (resultRows.length - 1));
+    log('  Числовых:   ' + numericItems.length);
+    log('  Символьных: ' + symbolicItems.length);
+
+    renderPreview(resultRows);
+    renderSummary(numericItems.length, symbolicItems.length, allItems.length);
+    $('preview').classList.add('active');
+    log('');
+    log('✅ Готово. Нажми «Скачать результат».');
+  };
+
+  function renderPreview(rows) {
+    const table = $('previewTable');
+    const head = rows[0];
+    const body = rows.slice(1, 31);
+    let html = '<thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
+      '</tr></thead><tbody>';
+    for (let i = 0; i < body.length; i++) {
+      const r = body[i];
+      // Первые numericItems.length — числовые, дальше — символьные
+      // Упростим: смотрим на суффикс /НТ
+      const isSym = String(r[0]).endsWith('/НТ');
+      const cls = isSym ? 's-sym' : 's-num';
+      html += '<tr class="' + cls + '">' +
+        r.map(v => '<td title="' + String(v).replace(/"/g, '&quot;') + '">' +
+          String(v) + '</td>').join('') + '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  function renderSummary(nNum, nSym, nTotal) {
+    $('summary').innerHTML =
+      '<span class="stat">Всего позиций: <span class="num">' + nTotal + '</span></span>' +
+      '<span class="stat">🟡 Числовых SKU: <span class="num">' + nNum + '</span></span>' +
+      '<span class="stat">🔵 Символьных SKU (+ /НТ): <span class="num">' + nSym + '</span></span>';
+  }
+
+  // ===== Скачивание =====
+  $('downloadBtn').onclick = () => {
+    if (!resultRows.length) return;
+    const ws = XLSX.utils.aoa_to_sheet(resultRows);
+    ws['!cols'] = [
+      {wch: 26},  // Ваш SKU *
+      {wch: 60},  // Название товара
+      {wch: 12},  // Цена *
+      {wch: 16},  // Зачёркнутая цена
+      {wch: 18},  // Минимум для акции
+      {wch: 14},  // Себестоимость
+      {wch: 22},  // Дополнительные расходы
+    ];
+    ws['!autofilter'] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: resultRows.length - 1, c: 6 }
+      })
+    };
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Товары');
+
+    const outName = 'ЯНДЕКС_МАРКЕТ_ЗАГРУЗКА_' + '.xlsx';
+    XLSX.writeFile(wb, outName);
+    log('✅ Скачан: ' + outName);
+  };
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обработка CSV магазина — ALBOMMONET.RU</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .warn {
+    background: #eef7ff; border-left: 4px solid #4a90e2; padding: 12px 16px;
+    border-radius: 8px; font-size: 14px; margin-bottom: 24px;
+  }
+  .marketplace-badge {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    padding: 3px 8px; background: #4a90e2; color: #fff;
+    border-radius: 5px; letter-spacing: 0.5px;
+    vertical-align: middle; margin-left: 8px;
+  }
+
+  .howto-box {
+    background: #f0f7ff; border-left: 4px solid #4a90e2;
+    border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 24px; font-size: 14px; line-height: 1.6;
+  }
+  .howto-box h4 { margin: 0 0 10px; font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .howto-box ol { margin: 8px 0 0 22px; padding: 0; }
+  .howto-box li { margin: 4px 0; }
+  .howto-box code {
+    background: #dcebfd; color: #1a4b85; padding: 2px 6px;
+    border-radius: 4px; font-size: 13px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+
+  .step-title {
+    font-size: 17px; font-weight: 700; margin: 28px 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-title .num {
+    display: inline-flex; width: 30px; height: 30px;
+    background: #4a90e2; color: #fff; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .step-desc {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 14px;
+    padding-left: 40px;
+  }
+  .step-desc b { color: #1a1a1a; }
+  .step-desc .file-name {
+    font-family: ui-monospace, Consolas, monospace;
+    background: #f0f0f0; padding: 2px 6px; border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .drop {
+    border: 2px dashed #c5c5c5; border-radius: 12px;
+    padding: 32px 20px; text-align: center; cursor: pointer;
+    transition: .15s; background: #fff; margin-bottom: 12px;
+  }
+  .drop:hover, .drop.hover { border-color: #4a90e2; background: #f0f7ff; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop .big-icon { font-size: 32px; margin-bottom: 10px; line-height: 1; }
+  .drop small { display: block; color: #999; margin-top: 8px; font-size: 12px; }
+
+  .settings {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .settings h4 { margin: 0 0 14px; font-size: 14px; color: #444; font-weight: 600; }
+  .settings-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .field input, .field select {
+    padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; font-family: inherit; background: #fff;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: #4a90e2; }
+
+  #log {
+    margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+    white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+    max-height: 380px; overflow-y: auto; display: none;
+  }
+  #log.active { display: block; }
+
+  #preview { display: none; margin-top: 20px; }
+  #preview.active { display: block; }
+  table.preview { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.preview th, table.preview td {
+    padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left;
+    white-space: nowrap; overflow: hidden; max-width: 280px; text-overflow: ellipsis;
+  }
+  table.preview th { background: #f5f5f5; font-weight: 600; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.4px; }
+
+  .summary {
+    margin-top: 16px; padding: 14px 18px; background: #f7f9fc;
+    border-radius: 8px; font-size: 14px; line-height: 1.7;
+  }
+  .summary .stat { display: inline-block; margin-right: 20px; }
+  .summary .num { font-weight: 700; color: #4a90e2; }
+
+  .hint { font-size: 12px; color: #888; margin-top: 12px; line-height: 1.55; }
+  .hint code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; }
+
+  .download-row {
+    margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;
+  }
+
+  .info-box {
+    background: #f0f7ff; border-left: 4px solid #4a90e2;
+    border-radius: 10px; padding: 0; margin: 24px 0; overflow: hidden;
+  }
+  .info-box > summary {
+    list-style: none; cursor: pointer; padding: 16px 20px;
+    font-size: 15px; font-weight: 600; display: flex;
+    align-items: center; gap: 10px; user-select: none;
+  }
+  .info-box > summary::-webkit-details-marker { display: none; }
+  .info-box > summary::after {
+    content: '▾'; margin-left: auto; transition: transform 0.2s;
+    color: #4a90e2; font-size: 14px;
+  }
+  .info-box[open] > summary::after { transform: rotate(180deg); }
+  .info-box > summary:hover { background: #e4efff; }
+  .info-body { padding: 4px 20px 20px 20px; font-size: 14px;
+    line-height: 1.65; color: #333; }
+  .info-body h4 { font-size: 14px; font-weight: 700; color: #1a1a1a;
+    margin: 18px 0 8px; }
+  .info-body h4:first-child { margin-top: 8px; }
+  .info-body p { margin: 6px 0; }
+  .info-body ul, .info-body ol { margin: 8px 0 8px 22px; }
+  .info-body li { margin: 4px 0; }
+  .info-body code {
+    background: #dcebfd; color: #1a4b85; padding: 2px 6px;
+    border-radius: 4px; font-size: 13px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .info-body table { width: 100%; border-collapse: collapse;
+    margin: 10px 0; font-size: 13px; }
+  .info-body table th, .info-body table td {
+    padding: 7px 10px; border-bottom: 1px solid #dcebfd;
+    text-align: left; vertical-align: top;
+  }
+  .info-body table th { background: #e4efff; font-weight: 600;
+    color: #1a4b85; font-size: 12.5px; }
+  .info-body .success-line {
+    background: #e8f9ee; border-left: 3px solid #2ecc71;
+    padding: 8px 12px; border-radius: 5px; margin: 6px 0;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12.5px; color: #1e874b;
+  }
+  .info-body .warn-line {
+    background: #fff8e6; border-left: 3px solid #f39c12;
+    padding: 8px 12px; border-radius: 5px; margin: 6px 0;
+    font-size: 13px; color: #8a6d00;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./index.html" class="active">Сравнения</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <a href="./index.html" style="display:inline-block; font-size:13px; color:var(--primary); text-decoration:none; margin-bottom:16px;">← Все скрипты</a>
+
+  <h1 class="page-title">🧾 Обработка CSV магазина <span class="marketplace-badge">ALBOMMONET</span></h1>
+  <p class="page-lead">
+    Убирает дубликаты и мусорные строки из CSV-выгрузки магазина,
+    оставляет 5 нужных колонок в правильном порядке. Файл готов
+    к дальнейшему сравнению с маркетплейсами.
+  </p>
+
+  <div class="warn">
+    🔒 Всё считается прямо в браузере.<br>
+    🛡️ Названия колонок находятся <b>автоматически</b> по синонимам.
+    Кодировка UTF-8, разделитель <code>;</code> — определится сам.
+  </div>
+
+  <!-- ============ КАК РАБОТАЕТ ============ -->
+  <div class="howto-box">
+    <h4>📋 Что делает скрипт</h4>
+    <ol>
+      <li>Читает CSV магазина (UTF-8, разделитель <code>;</code>).</li>
+      <li>Находит колонки по названиям: <b>Наименование</b>,
+        <b>Код артикула</b>, <b>ID артикула</b>, <b>Зачеркнутая цена</b>,
+        <b>ID товара</b>.</li>
+      <li>Удаляет строки с <b>пустым «ID артикула»</b> — это дубликаты
+        и мусор от недоделок движка сайта (включая строку
+        <code>category;АКЦИЯ</code>).</li>
+      <li>Собирает результат в порядке:
+        <b>ID артикула → ID товара → Наименование → Код артикула → Зачеркнутая цена</b>.</li>
+      <li>Отдаёт xlsx и csv для дальнейшей работы.</li>
+    </ol>
+  </div>
+
+  <!-- ============ ШАГ 1 ============ -->
+  <div class="step-title">
+    <span class="num">1</span>
+    Загрузи CSV-файл магазина
+  </div>
+  <div class="step-desc">
+    Скачай свежий CSV из админки сайта. Обычно называется
+    <span class="file-name">products(...).csv</span>.
+    Кодировка — <b>UTF-8</b>, разделитель <b><code>;</code></b>.
+  </div>
+
+  <div class="drop" id="drop">
+    <div class="big-icon">📄</div>
+    <div id="dropText">
+      📁 Перетащи .csv или нажми для выбора
+      <small>UTF-8 · разделитель ; · автоопределение</small>
+    </div>
+    <input type="file" id="fileInput" accept=".csv,.txt" hidden>
+  </div>
+
+  <!-- ============ ШАГ 2 ============ -->
+  <div class="step-title">
+    <span class="num">2</span>
+    Настройки (можно оставить как есть)
+  </div>
+  <div class="step-desc">
+    Названия колонок находятся <b>по синонимам</b>. Если в файле
+    колонка называется иначе — впиши точное название вручную.
+  </div>
+
+  <div class="settings">
+    <h4>Точные названия колонок (опционально)</h4>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Наименование</label>
+        <input type="text" id="colName" placeholder="Наименование">
+      </div>
+      <div class="field">
+        <label>Код артикула</label>
+        <input type="text" id="colCode" placeholder="Код артикула">
+      </div>
+      <div class="field">
+        <label>ID артикула (КОНСТАНТА)</label>
+        <input type="text" id="colIdArt" placeholder="ID артикула">
+      </div>
+      <div class="field">
+        <label>Зачеркнутая цена</label>
+        <input type="text" id="colPrice" placeholder="Зачеркнутая цена">
+      </div>
+      <div class="field">
+        <label>ID товара (КОНСТАНТА)</label>
+        <input type="text" id="colIdTov" placeholder="ID товара">
+      </div>
+    </div>
+    <div class="hint">
+      💡 Если поле пустое — скрипт ищет автоматически по синонимам.
+    </div>
+  </div>
+
+  <button id="runBtn" class="btn" disabled style="background:#4a90e2;">▶ Обработать CSV</button>
+
+  <div id="log"></div>
+
+  <div id="preview">
+    <h3 style="margin-bottom:12px;">Предпросмотр результата (первые 30 строк)</h3>
+    <div style="overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px;">
+      <table class="preview" id="previewTable"></table>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="download-row">
+      <button id="downloadXlsx" class="btn" style="background:#4a90e2;">⬇️ Скачать XLSX</button>
+      <button id="downloadCsv" class="btn btn-outline">⬇️ Скачать CSV (UTF-8, ;)</button>
+    </div>
+  </div>
+
+  <!-- ============ ИНСТРУКЦИЯ 1 ============ -->
+  <details class="info-box">
+    <summary>❓ Что делать, если название колонки в файле другое</summary>
+    <div class="info-body">
+      <p>
+        Скрипт ищет колонки <b>по списку синонимов</b>. В 99 % случаев
+        <b>ничего делать не надо</b>.
+      </p>
+
+      <h4>Что скрипт понимает «из коробки»</h4>
+      <table>
+        <thead>
+          <tr><th>Поле</th><th>Синонимы</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Наименование</b></td>
+            <td><code>Наименование</code>, <code>Название</code>,
+              <code>Название товара</code></td>
+          </tr>
+          <tr>
+            <td><b>Код артикула</b></td>
+            <td><code>Код артикула</code>, <code>Артикул</code>,
+              <code>Артикул продавца</code></td>
+          </tr>
+          <tr>
+            <td><b>ID артикула</b></td>
+            <td><code>ID артикула</code>, <code>ID статьи</code></td>
+          </tr>
+          <tr>
+            <td><b>Зачеркнутая цена</b></td>
+            <td><code>Зачеркнутая цена</code>, <code>Зачёркнутая цена</code>,
+              <code>Цена</code>, <code>Цена со скидкой</code></td>
+          </tr>
+          <tr>
+            <td><b>ID товара</b></td>
+            <td><code>ID товара</code>, <code>ID продукта</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn-line">
+        💡 Если в логе <b>❌ «не найдена»</b> — впиши точное название колонки
+        из файла в поле в настройках выше и запусти заново.
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ ИНСТРУКЦИЯ 2 ============ -->
+  <details class="info-box">
+    <summary>🗑️ Почему удаляются строки с пустым «ID артикула»</summary>
+    <div class="info-body">
+      <p>
+        Движок сайта иногда отдаёт CSV с мусором. Проявляется это так:
+      </p>
+      <ul>
+        <li>Есть строка <code>category; АКЦИЯ; ...</code> — это не товар,
+            а служебная категория. ID артикула пустой.</li>
+        <li>Бывают товары-дубликаты: у одного есть ID, у второго пусто.</li>
+      </ul>
+
+      <h4>Пример</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Тип строки</th>
+            <th>Наименование</th>
+            <th>ID артикула</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:#fdecec;">
+            <td>category</td>
+            <td>АКЦИЯ</td>
+            <td><b>(пусто)</b></td>
+            <td>🗑️ удаляем</td>
+          </tr>
+          <tr style="background:#e8f9ee;">
+            <td>product_variant</td>
+            <td>"Асидол". Средство для чистки монет</td>
+            <td><b>1148</b></td>
+            <td>✅ оставляем</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn-line">
+        💡 <b>Правило простое:</b> пустой «ID артикула» = мусорная строка.
+        Реальный товар всегда имеет ID.
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ ИНСТРУКЦИЯ 3 ============ -->
+  <details class="info-box">
+    <summary>📊 Что получаем на выходе</summary>
+    <div class="info-body">
+      <p>Итоговая таблица — <b>5 колонок в фиксированном порядке</b>:</p>
+      <table>
+        <thead>
+          <tr><th>№</th><th>Колонка</th><th>Зачем</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><b>ID артикула</b></td>
+            <td>Ключ для связи с сайтом (КОНСТАНТА)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><b>ID товара</b></td>
+            <td>Ключ для связи с сайтом (КОНСТАНТА)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><b>Наименование</b></td>
+            <td>Для сопоставления с маркетплейсами</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><b>Код артикула</b></td>
+            <td>Читаемый артикул</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><b>Зачеркнутая цена</b></td>
+            <td>Цена для сравнения</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Что можно делать с результатом</h4>
+      <ul>
+        <li>Загрузить в скрипт <b>«Сравнение с маркетплейсом»</b>
+          (когда сделаем).</li>
+        <li>Сравнить цены на своём сайте и на WB / Ozon.</li>
+        <li>Использовать для отчётов и аналитики.</li>
+      </ul>
+
+      <h4>Форматы выгрузки</h4>
+      <ul>
+        <li><b>XLSX</b> — обычный Excel, удобно открывать и редактировать.</li>
+        <li><b>CSV (UTF-8, ;)</b> — для программ, для импорта.</li>
+      </ul>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+
+  let csvText = '';
+  let fileName = '';
+  let resultRows = [];
+
+  // ==== Синонимы названий колонок ====
+  const SYNONYMS = {
+    name: [
+      'наименование', 'название', 'название товара', 'наименование товара',
+    ],
+    code: [
+      'код артикула', 'артикул', 'артикул продавца',
+    ],
+    idArt: [
+      'id артикула', 'id статьи', 'ид артикула',
+    ],
+    price: [
+      'зачеркнутая цена', 'зачёркнутая цена', 'старая цена',
+      'цена до скидки', 'цена без скидки',
+    ],
+    idTov: [
+      'id товара', 'id продукта', 'ид товара',
+    ],
+  };
+
+  function log(msg, clear) {
+    if (clear) logEl.textContent = '';
+    logEl.textContent += msg + '\n';
+    logEl.classList.add('active');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function normHeader(s) {
+    return String(s == null ? '' : s)
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[\s\u00a0]+/g, ' ')
+      .replace(/[.,;:!?()[\]{}«»"'`]/g, '')
+      .trim();
+  }
+
+  function toStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v.trim();
+    return String(v).trim();
+  }
+
+  // ==== Автоопределение разделителя ====
+  function detectDelimiter(text) {
+    const firstLine = text.split(/\r?\n/)[0] || '';
+    const counts = {
+      ';': (firstLine.match(/;/g) || []).length,
+      ',': (firstLine.match(/,/g) || []).length,
+      '\t': (firstLine.match(/\t/g) || []).length,
+      '|': (firstLine.match(/\|/g) || []).length,
+    };
+    let best = ';', max = 0;
+    for (const k of Object.keys(counts)) {
+      if (counts[k] > max) { max = counts[k]; best = k; }
+    }
+    return best;
+  }
+
+  // ==== CSV-парсер (понимает кавычки и переносы строк внутри них) ====
+  function parseCSV(text, delim) {
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    let i = 0;
+    while (i < text.length) {
+      const ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+          inQuotes = false;
+          i++;
+          continue;
+        }
+        field += ch;
+        i++;
+      } else {
+        if (ch === '"') { inQuotes = true; i++; continue; }
+        if (ch === delim) { row.push(field); field = ''; i++; continue; }
+        if (ch === '\r') { i++; continue; }
+        if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+        field += ch;
+        i++;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function findColBySynonyms(headerRow, synonyms) {
+    if (!Array.isArray(synonyms)) return { idx: -1, matchedBy: null };
+    const norm = headerRow.map(normHeader);
+    for (const syn of synonyms) {
+      const target = normHeader(syn);
+      let idx = norm.findIndex(h => h === target);
+      if (idx !== -1) return { idx, matchedBy: syn };
+      idx = norm.findIndex(h => h.includes(target));
+      if (idx !== -1) return { idx, matchedBy: syn };
+      if (target.length > 4) {
+        idx = norm.findIndex(h => h.length > 4 && target.includes(h));
+        if (idx !== -1) return { idx, matchedBy: syn };
+      }
+    }
+    return { idx: -1, matchedBy: null };
+  }
+
+  function findCols(headerRow, force) {
+    const cols = {};
+    for (const key of Object.keys(SYNONYMS)) {
+      const manual = force[key] || '';
+      const synonyms = manual ? [manual, ...SYNONYMS[key]] : SYNONYMS[key];
+      cols[key] = findColBySynonyms(headerRow, synonyms);
+    }
+    return cols;
+  }
+
+  // ==== загрузка файла ====
+  $('drop').onclick = () => $('fileInput').click();
+  $('fileInput').onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0]); };
+  ['dragover','dragleave','drop'].forEach(ev => {
+    $('drop').addEventListener(ev, e => {
+      e.preventDefault();
+      if (ev === 'dragover') $('drop').classList.add('hover');
+      if (ev === 'dragleave') $('drop').classList.remove('hover');
+      if (ev === 'drop') {
+        $('drop').classList.remove('hover');
+        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+      }
+    });
+  });
+
+  function handleFile(file) {
+    fileName = file.name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const buf = e.target.result;
+        csvText = new TextDecoder('utf-8').decode(buf);
+        // удаляем BOM, если есть
+        if (csvText.charCodeAt(0) === 0xFEFF) csvText = csvText.slice(1);
+
+        $('drop').classList.add('done');
+        $('dropText').innerHTML = '✅ <b>' + fileName + '</b><br><small>Размер: ' +
+          Math.round(buf.byteLength / 1024) + ' КБ</small>';
+        $('runBtn').disabled = false;
+        log('Файл загружен: ' + fileName, true);
+        log('  Кодировка: UTF-8');
+        log('  Размер: ' + Math.round(buf.byteLength / 1024) + ' КБ');
+      } catch (err) {
+        log('❌ Ошибка чтения: ' + err.message, true);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ==== обработка ====
+  $('runBtn').onclick = () => {
+    if (!csvText) return;
+
+    log('');
+    log('=== Обработка CSV ===');
+
+    const delim = detectDelimiter(csvText);
+    const delimLabel = delim === '\t' ? 'TAB' : delim;
+    log('Определён разделитель: ' + delimLabel);
+
+    const rows = parseCSV(csvText, delim);
+    log('Всего строк в файле: ' + rows.length);
+
+    if (rows.length < 2) {
+      log('❌ Файл пустой или содержит только шапку.');
+      return;
+    }
+
+    const headerRow = rows[0];
+    log('Колонок в шапке: ' + headerRow.length);
+
+    // ==== ищем колонки ====
+    const force = {
+      name:   $('colName').value.trim(),
+      code:   $('colCode').value.trim(),
+      idArt:  $('colIdArt').value.trim(),
+      price:  $('colPrice').value.trim(),
+      idTov:  $('colIdTov').value.trim(),
+    };
+    const cols = findCols(headerRow, force);
+
+    log('');
+    log('Найденные колонки:');
+    const labels = {
+      name:  'Наименование',
+      code:  'Код артикула',
+      idArt: 'ID артикула',
+      price: 'Зачеркнутая цена',
+      idTov: 'ID товара',
+    };
+    let missing = 0;
+    for (const key of Object.keys(labels)) {
+      const c = cols[key];
+      if (!c || c.idx === -1) {
+        log('  ❌ ' + labels[key] + ' — не найдена');
+        missing++;
+      } else {
+        log('  ✅ ' + labels[key] + ' — колонка ' + (c.idx + 1) +
+            ' (найдено по «' + c.matchedBy + '»)');
+      }
+    }
+
+    if (missing > 0) {
+      log('');
+      log('❌ Не все колонки найдены. Проверьте настройки или файл.');
+      return;
+    }
+
+    // ==== идём по строкам начиная со второй ====
+    const outData = [
+      ['ID артикула', 'ID товара', 'Наименование', 'Код артикула', 'Зачеркнутая цена'],
+    ];
+
+    let totalRows = rows.length - 1;
+    let skippedNoId = 0;
+    let added = 0;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+
+      const idArt = toStr(row[cols.idArt.idx]);
+      // ключевой фильтр: пустой ID артикула = мусор
+      if (!idArt) {
+        skippedNoId++;
+        continue;
+      }
+
+      const idTov = toStr(row[cols.idTov.idx]);
+      const name  = toStr(row[cols.name.idx]);
+      const code  = toStr(row[cols.code.idx]);
+      const price = toStr(row[cols.price.idx]);
+
+      outData.push([idArt, idTov, name, code, price]);
+      added++;
+    }
+
+    log('');
+    log('=== ИТОГО ===');
+    log('  Всего строк после шапки: ' + totalRows);
+    log('  Удалено (пустой ID артикула): ' + skippedNoId);
+    log('  Оставлено товаров: ' + added);
+
+    resultRows = outData;
+
+    // ==== предпросмотр ====
+    renderPreview(outData);
+    renderSummary(totalRows, skippedNoId, added);
+
+    $('preview').classList.add('active');
+    log('');
+    log('✅ Готово. Скачайте XLSX или CSV.');
+  };
+
+  function renderPreview(rows) {
+    const table = $('previewTable');
+    const head = rows[0];
+    const body = rows.slice(1, 31);
+    let html = '<thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
+      '</tr></thead><tbody>';
+    for (const r of body) {
+      html += '<tr>' +
+        r.map(v => '<td title="' + String(v).replace(/"/g, '&quot;') + '">' +
+          String(v) + '</td>').join('') + '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  function renderSummary(total, skipped, added) {
+    $('summary').innerHTML =
+      '<span class="stat">Всего строк в файле: <span class="num">' + total + '</span></span>' +
+      '<span class="stat">Удалено мусорных: <span class="num">' + skipped + '</span></span>' +
+      '<span class="stat">Оставлено товаров: <span class="num">' + added + '</span></span>';
+  }
+
+  // ==== скачивание XLSX ====
+  $('downloadXlsx').onclick = () => {
+    if (!resultRows.length) return;
+    const ws = XLSX.utils.aoa_to_sheet(resultRows);
+    ws['!cols'] = [
+      {wch:14},   // ID артикула
+      {wch:14},   // ID товара
+      {wch:70},   // Наименование
+      {wch:22},   // Код артикула
+      {wch:18},   // Зачеркнутая цена
+    ];
+    ws['!autofilter'] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: resultRows.length - 1, c: 4 }
+      })
+    };
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Товары');
+
+    const base = (fileName || 'products').replace(/\.(csv|txt)$/i, '');
+    XLSX.writeFile(wb, base + '_обработано.xlsx');
+    log('✅ Скачан: ' + base + '_обработано.xlsx');
+  };
+
+  // ==== скачивание CSV ====
+  $('downloadCsv').onclick = () => {
+    if (!resultRows.length) return;
+
+    // оборачиваем каждое поле в кавычки, экранируем внутренние кавычки
+    const lines = resultRows.map(row =>
+      row.map(v => {
+        const s = String(v == null ? '' : v);
+        return '"' + s.replace(/"/g, '""') + '"';
+      }).join(';')
+    );
+    const csvOut = lines.join('\r\n');
+
+    // добавляем BOM для Excel
+    const blob = new Blob(['\ufeff' + csvOut], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const base = (fileName || 'products').replace(/\.(csv|txt)$/i, '');
+    a.download = base + '_обработано.csv';
+    a.click();
+    log('✅ Скачан: ' + base + '_обработано.csv');
+  };
+
+})();
+</script>
+</body>
+</html>

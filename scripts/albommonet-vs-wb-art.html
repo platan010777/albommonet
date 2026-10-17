@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALBOMMONET ↔ WB — умный матчинг — ALBOMMONET.RU</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" href="data:,">
+<style>
+  .warn {
+    background: #fff8e0; border-left: 4px solid #FFC700; padding: 12px 16px;
+    border-radius: 8px; font-size: 14px; margin-bottom: 24px;
+  }
+  .howto-box {
+    background: #f0f7ff; border-left: 4px solid #4a90e2;
+    border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 24px; font-size: 14px; line-height: 1.6;
+  }
+  .howto-box h4 { margin: 0 0 10px; font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .howto-box ol { margin: 8px 0 0 22px; padding: 0; }
+  .howto-box li { margin: 4px 0; }
+  .howto-box code {
+    background: #dcebfd; color: #1a4b85; padding: 2px 6px;
+    border-radius: 4px; font-size: 13px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+
+  .step-title {
+    font-size: 17px; font-weight: 700; margin: 28px 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-title .num {
+    display: inline-flex; width: 30px; height: 30px;
+    background: #FFC700; color: #1a1a1a; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 15px;
+    font-weight: 700; flex-shrink: 0;
+  }
+  .step-desc {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 14px;
+    padding-left: 40px;
+  }
+  .step-desc b { color: #1a1a1a; }
+
+  .shop-block {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+    border-left: 5px solid #FFC700;
+  }
+  .shop-block.wb { border-left-color: #cb11ab; }
+  .shop-block h3 {
+    margin: 0 0 4px; font-size: 17px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .shop-block .shop-sub {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 16px;
+  }
+  .shop-block .num-circle {
+    display: inline-flex; width: 28px; height: 28px;
+    background: #FFC700; color: #1a1a1a; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 14px;
+    font-weight: 700; flex-shrink: 0;
+  }
+  .shop-block.wb .num-circle { background: #cb11ab; color: #fff; }
+
+  .drop {
+    border: 2px dashed #c5c5c5; border-radius: 10px;
+    padding: 20px 16px; text-align: center; cursor: pointer;
+    transition: .15s; background: #fafafa; margin-bottom: 10px;
+  }
+  .drop:hover, .drop.hover { border-color: #FFC700; background: #fffdf5; }
+  .shop-block.wb .drop:hover,
+  .shop-block.wb .drop.hover { border-color: #cb11ab; background: #fdf5fb; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop .icon { font-size: 24px; margin-bottom: 6px; line-height: 1; }
+  .drop .title { font-size: 14px; font-weight: 600; }
+  .drop small { display: block; color: #999; margin-top: 6px; font-size: 12px; }
+
+  .settings {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .settings h4 { margin: 0 0 14px; font-size: 14px; color: #444; font-weight: 600; }
+  .settings-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .field input {
+    padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; font-family: inherit;
+  }
+  .field input:focus { outline: none; border-color: #FFC700; }
+
+  #log {
+    margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+    white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+    max-height: 420px; overflow-y: auto; display: none;
+  }
+  #log.active { display: block; }
+
+  #preview { display: none; margin-top: 20px; }
+  #preview.active { display: block; }
+  table.preview { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.preview th, table.preview td {
+    padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left;
+    white-space: nowrap; overflow: hidden; max-width: 220px; text-overflow: ellipsis;
+  }
+  table.preview th { background: #f5f5f5; font-weight: 600; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.4px; }
+  table.preview tr.s-eq { background: #f4fbf7; }
+  table.preview tr.s-up { background: #fff8e6; }
+  table.preview tr.s-down { background: #e8f4ff; }
+  table.preview tr.s-orphan { background: #f0f0f0; color: #666; }
+
+  .summary {
+    margin-top: 16px; padding: 14px 18px; background: #f7f9fc;
+    border-radius: 8px; font-size: 14px; line-height: 1.7;
+  }
+  .summary .stat { display: inline-block; margin-right: 20px; }
+  .summary .num { font-weight: 700; color: #cb11ab; }
+  .summary .stat.eq .num { color: #1e874b; }
+  .summary .stat.up .num { color: #8a6d00; }
+  .summary .stat.down .num { color: #3d7bc4; }
+
+  .hint { font-size: 12px; color: #888; margin-top: 12px; line-height: 1.55; }
+  .hint code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px;
+    font-size: 12.5px; color: #555;
+  }
+  .legend .li { display: flex; align-items: center; gap: 6px; }
+  .legend .square {
+    display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+  }
+  .legend .sq-eq { background: #c8f1d6; }
+  .legend .sq-up { background: #ffe8a3; }
+  .legend .sq-down { background: #c7e0ff; }
+  .legend .sq-orphan { background: #dcdcdc; }
+
+  .info-box {
+    background: #fff8e0; border-left: 4px solid #FFC700;
+    border-radius: 10px; padding: 0; margin: 24px 0; overflow: hidden;
+  }
+  .info-box > summary {
+    list-style: none; cursor: pointer; padding: 16px 20px;
+    font-size: 15px; font-weight: 600; display: flex;
+    align-items: center; gap: 10px; user-select: none;
+  }
+  .info-box > summary::-webkit-details-marker { display: none; }
+  .info-box > summary::after {
+    content: '▾'; margin-left: auto; transition: transform 0.2s;
+    color: #b88f00; font-size: 14px;
+  }
+  .info-box[open] > summary::after { transform: rotate(180deg); }
+  .info-box > summary:hover { background: #fff4d9; }
+  .info-body { padding: 4px 20px 20px 20px; font-size: 14px;
+    line-height: 1.65; color: #333; }
+  .info-body h4 { font-size: 14px; font-weight: 700; color: #1a1a1a;
+    margin: 18px 0 8px; }
+  .info-body h4:first-child { margin-top: 8px; }
+  .info-body p { margin: 6px 0; }
+  .info-body ul, .info-body ol { margin: 8px 0 8px 22px; }
+  .info-body li { margin: 4px 0; }
+  .info-body code {
+    background: #fff4d9; color: #7a5c00; padding: 2px 6px;
+    border-radius: 4px; font-size: 13px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .info-body table { width: 100%; border-collapse: collapse;
+    margin: 10px 0; font-size: 13px; }
+  .info-body table th, .info-body table td {
+    padding: 7px 10px; border-bottom: 1px solid #f0e4c0;
+    text-align: left; vertical-align: top;
+  }
+  .info-body table th { background: #fff4d9; font-weight: 600;
+    color: #7a5c00; font-size: 12.5px; }
+  .info-body .success-line {
+    background: #e8f9ee; border-left: 3px solid #2ecc71;
+    padding: 8px 12px; border-radius: 5px; margin: 6px 0;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12.5px; color: #1e874b;
+  }
+  .info-body .warn-line {
+    background: #fff8e6; border-left: 3px solid #f39c12;
+    padding: 8px 12px; border-radius: 5px; margin: 6px 0;
+    font-size: 13px; color: #8a6d00;
+  }
+
+  .method-chip {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .method-art {
+    background: #e8f9ee;
+    color: #1e874b;
+  }
+  .method-name {
+    background: #eef4ff;
+    color: #3d7bc4;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./index.html" class="active">Сравнения</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <a href="./index.html" style="display:inline-block; font-size:13px; color:var(--primary); text-decoration:none; margin-bottom:16px;">← Все скрипты</a>
+
+  <h1 class="page-title">🎯 ALBOMMONET.RU ↔ Wildberries — умный матчинг</h1>
+  <p class="page-lead">
+    Двухпроходное сопоставление: сначала <b>по коду артикула</b>
+    (порог 90 %), затем — для несовпавших — <b>по названию</b>
+    (порог 70 %). Самый надёжный вариант.
+  </p>
+
+  <div class="warn">
+    🔒 Всё считается прямо в браузере. Файлы никуда не отправляются.<br>
+    🛡️ Скрипт умеет чистить склеенные артикулы WB
+    (например, <code>LB1-ProfLB1-ProfПрозрачный</code> → <code>LB1-Prof</code>).
+  </div>
+
+  <div class="howto-box">
+    <h4>📋 Что загружаем</h4>
+    <ol>
+      <li>
+        <b>CSV сайта ALBOMMONET.RU</b> — сырой или уже обработанный.
+      </li>
+      <li>
+        <b>Общие характеристики WB</b> — там НАЗВАНИЯ и артикул продавца.
+      </li>
+      <li>
+        <b>Обновление цен WB</b> — там ЦЕНЫ.
+      </li>
+    </ol>
+    <p style="margin-top:10px;">
+      💡 <b>Проход 1</b> — по артикулу с порогом 90 % (точное совпадение
+      или мелкие различия). <b>Проход 2</b> — по названию с порогом 70 %
+      для тех, кто не склеился на первом проходе.
+    </p>
+  </div>
+
+  <!-- ============ ШАГ 1 ============ -->
+  <div class="step-title">
+    <span class="num">1</span>
+    CSV сайта ALBOMMONET.RU
+  </div>
+  <div class="step-desc">
+    Свежая выгрузка из админки. Разделитель — <code>;</code>,
+    кодировка — UTF-8.
+  </div>
+
+  <div class="shop-block">
+    <h3><span class="num-circle">A</span> ALBOMMONET.RU</h3>
+    <div class="shop-sub">Выгрузка товаров с сайта — CSV</div>
+
+    <div class="drop" id="dropSite">
+      <div class="icon">🅰️</div>
+      <div class="title">CSV выгрузки сайта</div>
+      <div id="dropSiteText"><small>📁 .csv или нажмите для выбора</small></div>
+      <input type="file" id="fileSite" accept=".csv,.txt" hidden>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 2 ============ -->
+  <div class="step-title">
+    <span class="num">2</span>
+    Оба файла WB — магазин №1
+  </div>
+  <div class="step-desc">
+    Загрузи «Общие характеристики» и «Обновление цен» одного магазина WB.
+    <b>Порядок не важен.</b>
+  </div>
+
+  <div class="shop-block wb">
+    <h3><span class="num-circle">W</span> Wildberries — магазин №1</h3>
+    <div class="shop-sub">Общие характеристики → там АРТИКУЛЫ · Обновление цен → там ЦЕНЫ</div>
+
+    <div class="drop" id="dropWbChars">
+      <div class="icon">📋</div>
+      <div class="title">Общие характеристики</div>
+      <div id="dropWbCharsText"><small>📁 .xlsx или нажмите для выбора</small></div>
+      <input type="file" id="fileWbChars" accept=".xls,.xlsx" hidden>
+    </div>
+
+    <div class="drop" id="dropWbPrices">
+      <div class="icon">💰</div>
+      <div class="title">Обновление цен</div>
+      <div id="dropWbPricesText"><small>📁 .xlsx или нажмите для выбора</small></div>
+      <input type="file" id="fileWbPrices" accept=".xls,.xlsx" hidden>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 3 ============ -->
+  <div class="step-title">
+    <span class="num">3</span>
+    Настройки и запуск
+  </div>
+  <div class="step-desc">
+    Два порога: <b>по артикулу</b> (проход 1) и <b>по названию</b> (проход 2).
+  </div>
+
+  <div class="settings">
+    <h4>Пороги схожести</h4>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Порог 1 — по артикулу, % (70 – 100)</label>
+        <input type="text" id="thresholdArt" value="90" maxlength="3">
+      </div>
+      <div class="field">
+        <label>Порог 2 — по названию, % (50 – 100)</label>
+        <input type="text" id="thresholdName" value="50" maxlength="3">
+      </div>
+    </div>
+    <div class="hint">
+      <b>90 %</b> — оптимально для артикулов ·
+      <b>50 %</b> — оптимально для названий
+    </div>
+
+    <h4 style="margin-top:20px;">Точные названия колонок (опционально)</h4>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Сайт: Код артикула</label>
+        <input type="text" id="siteColCode" placeholder="Код артикула">
+      </div>
+      <div class="field">
+        <label>Сайт: Наименование</label>
+        <input type="text" id="siteColName" placeholder="Наименование">
+      </div>
+      <div class="field">
+        <label>Сайт: ID артикула</label>
+        <input type="text" id="siteColIdArt" placeholder="ID артикула">
+      </div>
+      <div class="field">
+        <label>Сайт: Зачеркнутая цена</label>
+        <input type="text" id="siteColPrice" placeholder="Зачеркнутая цена">
+      </div>
+    </div>
+    <div class="hint">
+      💡 Если поля пустые — скрипт ищет автоматически по синонимам.
+    </div>
+  </div>
+
+  <button id="runBtn" class="btn" disabled style="background:#FFC700;color:#1a1a1a;">▶ Сравнить и скачать</button>
+
+  <div id="log"></div>
+
+  <div id="preview">
+    <h3 style="margin-bottom:12px;">Предпросмотр (первые 30 строк)</h3>
+    <div style="overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px;">
+      <table class="preview" id="previewTable"></table>
+    </div>
+    <div class="legend">
+      <div class="li"><span class="square sq-eq"></span> Цены совпадают</div>
+      <div class="li"><span class="square sq-up"></span> WB дороже</div>
+      <div class="li"><span class="square sq-down"></span> WB дешевле</div>
+      <div class="li"><span class="square sq-orphan"></span> Нет пары</div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div style="margin-top:16px;">
+      <button id="downloadBtn" class="btn" style="background:#FFC700;color:#1a1a1a;">⬇️ Скачать полный результат (xlsx)</button>
+    </div>
+  </div>
+
+  <!-- ============ ИНСТРУКЦИЯ 1 ============ -->
+  <details class="info-box" open>
+    <summary>🎯 Как работает двухпроходный матчинг</summary>
+    <div class="info-body">
+      <p>
+        Скрипт сопоставляет товары <b>в два прохода</b>:
+      </p>
+
+      <h4>Проход 1 — по артикулу (порог 90 %)</h4>
+      <p>
+        WB иногда отдаёт артикул в «склеенном» виде. Скрипт это чистит:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Что отдаёт WB</th><th>После очистки</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>LB1-ProfLB1-ProfПрозрачный</code></td>
+            <td><code>LB1-Prof</code></td>
+          </tr>
+          <tr>
+            <td><code>АБ-10Б/АБ-10Б/Бордовый</code></td>
+            <td><code>АБ-10Б</code></td>
+          </tr>
+          <tr>
+            <td><code>АП-97ПАП-97ПГолубой</code></td>
+            <td><code>АП-97П</code></td>
+          </tr>
+          <tr>
+            <td><code>ЛМ48-5_Prof</code></td>
+            <td><code>ЛМ48-5_Prof</code> (не меняется)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="success-line">
+        ✅ LB1-Prof ↔ LB1-ProfLB1-ProfПрозрачный → 100 %
+      </div>
+
+      <h4>Проход 2 — по названию (порог 50 %)</h4>
+      <p>
+        Для тех товаров, что не склеились по артикулу (обычно из-за цвета
+        в WB-артикуле — он там не выделен):
+      </p>
+      <div class="success-line">
+        ✅ АБ-10Б-Б (сайт, «бордовый») ↔ АБ-10Б/АБ-10Б/Бордовый (WB) → ~55 %
+      </div>
+
+      <h4>Колонка «Способ» в отчёте</h4>
+      <p>
+        В итоговом файле будет колонка, где указано, каким проходом нашли пару:
+      </p>
+      <ul>
+        <li><span class="method-chip method-art">🎯 по артикулу</span> —
+          точное совпадение или мелкие различия (100 % — самый надёжный)</li>
+        <li><span class="method-chip method-name">📊 по названию</span> —
+          пара найдена по названию (проверь глазами)</li>
+      </ul>
+
+      <div class="warn-line">
+        💡 <b>Совет:</b> если по названию много склеек, но они «серые»,
+        — отфильтруй в Excel по колонке «Способ» = «📊 по названию»
+        и проверь вручную.
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ ИНСТРУКЦИЯ 2 ============ -->
+  <details class="info-box">
+    <summary>📊 Что означают статусы в отчёте</summary>
+    <div class="info-body">
+      <table>
+        <thead>
+          <tr><th>Статус</th><th>Цвет</th><th>Что значит</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🟢 <b>Совпадает</b></td>
+            <td>зелёный</td>
+            <td>Цена сайта = цена WB.</td>
+          </tr>
+          <tr>
+            <td>🟡 <b>WB дороже</b></td>
+            <td>жёлтый</td>
+            <td>На WB товар дороже, чем на сайте.</td>
+          </tr>
+          <tr>
+            <td>🔴 <b>WB дешевле</b></td>
+            <td>голубой</td>
+            <td>На WB товар дешевле, чем на сайте.</td>
+          </tr>
+          <tr>
+            <td>⚪ <b>Только на сайте</b></td>
+            <td>серый</td>
+            <td>Товар есть на сайте, но нет на WB.</td>
+          </tr>
+          <tr>
+            <td>⚪ <b>Только на WB</b></td>
+            <td>серый</td>
+            <td>Товар есть на WB, но нет на сайте.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Что делать с расхождениями</h4>
+      <ol>
+        <li>Скачай файл, открой в Excel. Автофильтр включён.</li>
+        <li>Отфильтруй «WB дороже» / «WB дешевле».</li>
+        <li>Отсортируй по «Разница ₽» — крупные расхождения сверху.</li>
+        <li>Реши по каждой: поднять цену на WB, снизить на сайте, или оставить.</li>
+      </ol>
+    </div>
+  </details>
+
+  <!-- ============ ИНСТРУКЦИЯ 3 ============ -->
+  <details class="info-box">
+    <summary>📘 Колонки в итоговом файле</summary>
+    <div class="info-body">
+      <table>
+        <thead><tr><th>№</th><th>Колонка</th><th>Откуда</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><b>ID артикула</b></td><td>с сайта</td></tr>
+          <tr><td>2</td><td><b>Артикул продавца WB</b></td><td>из WB</td></tr>
+          <tr><td>3</td><td><b>Код артикула</b></td><td>с сайта</td></tr>
+          <tr><td>4</td><td><b>ID WB (nmID)</b></td><td>из WB</td></tr>
+          <tr><td>5</td><td><b>Название (сайт)</b></td><td>с сайта</td></tr>
+          <tr><td>6</td><td><b>Название WB</b></td><td>из WB</td></tr>
+          <tr><td>7</td><td><b>Цена сайта</b></td><td>с сайта</td></tr>
+          <tr><td>8</td><td><b>Цена WB</b></td><td>из WB</td></tr>
+          <tr><td>9</td><td><b>Разница ₽</b></td><td>WB − сайт</td></tr>
+          <tr><td>10</td><td><b>Разница %</b></td><td>от цены сайта</td></tr>
+          <tr><td>11</td><td><b>Статус</b></td><td>🟢 / 🟡 / 🔴 / ⚪</td></tr>
+          <tr><td>12</td><td><b>Способ</b></td><td>🎯 по артикулу / 📊 по названию</td></tr>
+          <tr><td>13</td><td><b>Точность, %</b></td><td>от артикулов или названий</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Как работает «Способ»</h4>
+      <ul>
+        <li><b>🎯 по артикулу</b> — пара найдена в первом проходе.
+          Максимальная уверенность.</li>
+        <li><b>📊 по названию</b> — пара найдена во втором проходе
+          (после неудачи по артикулу). Проверяй глазами.</li>
+        <li><b>—</b> (пусто) — товар без пары.</li>
+      </ul>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+
+  let csvSiteText = '';
+  let wbChars = null, wbPrices = null;
+  let resultRows = [];
+
+  const SITE_SYNONYMS = {
+    name:   ['наименование', 'название', 'название товара'],
+    code:   ['код артикула', 'артикул', 'артикул продавца'],
+    idArt:  ['id артикула', 'id статьи', 'ид артикула'],
+    price:  ['зачеркнутая цена', 'зачёркнутая цена', 'старая цена',
+             'цена до скидки', 'цена без скидки'],
+  };
+
+  const WB_SYNONYMS = {
+    charsArticle: ['артикул продавца', 'артикул поставщика', 'sku продавца',
+                   'артикул (продавца)', 'seller article'],
+    charsNmId: ['артикул wb', 'артикул вб', 'nmid', 'номенклатура',
+                'wb артикул', 'артикул wildberries'],
+    charsName: ['наименование', 'название', 'наименование товара',
+                'название товара', 'товар', 'наим.'],
+    pricesNmId: ['артикул wb', 'артикул вб', 'nmid', 'номенклатура',
+                 'wb артикул', 'артикул wildberries'],
+    pricesPrice: ['текущая цена', 'текущая цена, руб.', 'текущая цена руб',
+                  'цена', 'цена, руб.', 'цена продажи',
+                  'цена реализации', 'цена со скидкой'],
+    pricesArticle: ['артикул продавца', 'артикул поставщика', 'sku продавца',
+                    'артикул (продавца)'],
+  };
+
+  function log(msg, clear) {
+    if (clear) logEl.textContent = '';
+    logEl.textContent += msg + '\n';
+    logEl.classList.add('active');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function normHeader(s) {
+    return String(s == null ? '' : s)
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[\s\u00a0]+/g, ' ')
+      .replace(/[.,;:!?()[\]{}«»"'`]/g, '')
+      .trim();
+  }
+
+  // ==== УМНАЯ ЧИСТКА АРТИКУЛА WB ====
+  // Убирает склейку "АБ-10Б/АБ-10Б/Бордовый" → "АБ-10Б"
+  // и "LB1-ProfLB1-ProfПрозрачный" → "LB1-Prof"
+  function cleanWbArticle(s) {
+    let t = String(s || '').trim();
+    if (!t) return '';
+
+    // Случай 1: "АБ-10Б/АБ-10Б/Бордовый" → "АБ-10Б"
+    const slashParts = t.split('/');
+    if (slashParts.length >= 2) {
+      const first = slashParts[0].trim();
+      const second = slashParts[1].trim();
+      if (first && first === second) {
+        return first;
+      }
+    }
+
+    // Случай 2: "LB1-ProfLB1-ProfПрозрачный" → "LB1-Prof"
+    // Ищем повтор префикса длиной 3+
+    let m = t.match(/^(.{3,}?)\1/);
+    if (m) return m[1];
+
+    // Случай 3: короткий повтор "АП-97ПАП-97П" → "АП-97П"
+    m = t.match(/^(.{2,}?)\1/);
+    if (m) return m[1];
+
+    return t;
+  }
+
+  // ==== НОРМАЛИЗАЦИЯ АРТИКУЛА (для сравнения) ====
+  // Всё кроме букв-цифр убираем, всё в нижний регистр, ё→е, й→и
+  function normalizeArticle(s) {
+    let t = String(s || '');
+    t = t.toLowerCase();
+    t = t.replace(/ё/g, 'е').replace(/й/g, 'и');
+    t = t.replace(/[^a-zа-я0-9]/gi, '');
+    return t;
+  }
+
+  // ==== НОРМАЛИЗАЦИЯ НАЗВАНИЯ (для сравнения) ====
+  function normalizeName(s) {
+    let t = String(s || '');
+    t = t.toLowerCase();
+    t = t.replace(/ё/g, 'е').replace(/й/g, 'и');
+    t = t.replace(/[.,;:!?()[\]{}«»"'`\\/|_\-–—+*=<>@#$%^&~]/g, ' ');
+    t = t.replace(/[\s\u00a0]+/g, ' ').trim();
+    return t;
+  }
+
+  function similarity(a, b) {
+    a = String(a || ''); b = String(b || '');
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+    if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
+    const bigrams = s => {
+      const set = new Set();
+      for (let i = 0; i < s.length - 1; i++) set.add(s.substr(i, 2));
+      return set;
+    };
+    const A = bigrams(a), B = bigrams(b);
+    let inter = 0;
+    for (const g of A) if (B.has(g)) inter++;
+    const dice = 2 * inter / (A.size + B.size);
+    const lenRatio = Math.min(a.length, b.length) / Math.max(a.length, b.length);
+    return dice * 0.85 + lenRatio * 0.15;
+  }
+
+  function toStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v.trim();
+    return String(v).trim();
+  }
+
+  function parsePrice(v) {
+    if (v == null || v === '') return null;
+    if (typeof v === 'number') return v;
+    const s = String(v).replace(/\s|\u00a0/g, '').replace(',', '.').replace(/[^\d.\-]/g, '');
+    const n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+
+  function detectDelimiter(text) {
+    const firstLine = text.split(/\r?\n/)[0] || '';
+    const counts = {
+      ';': (firstLine.match(/;/g) || []).length,
+      ',': (firstLine.match(/,/g) || []).length,
+      '\t': (firstLine.match(/\t/g) || []).length,
+      '|': (firstLine.match(/\|/g) || []).length,
+    };
+    let best = ';', max = 0;
+    for (const k of Object.keys(counts)) {
+      if (counts[k] > max) { max = counts[k]; best = k; }
+    }
+    return best;
+  }
+
+  function parseCSV(text, delim) {
+    const rows = [];
+    let row = [], field = '', inQuotes = false, i = 0;
+    while (i < text.length) {
+      const ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+          inQuotes = false; i++; continue;
+        }
+        field += ch; i++;
+      } else {
+        if (ch === '"') { inQuotes = true; i++; continue; }
+        if (ch === delim) { row.push(field); field = ''; i++; continue; }
+        if (ch === '\r') { i++; continue; }
+        if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+        field += ch; i++;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function findColBySynonyms(headerRow, synonyms) {
+    if (!Array.isArray(synonyms)) return { idx: -1, matchedBy: null };
+    const norm = headerRow.map(normHeader);
+    for (const syn of synonyms) {
+      const target = normHeader(syn);
+      let idx = norm.findIndex(h => h === target);
+      if (idx !== -1) return { idx, matchedBy: syn };
+      idx = norm.findIndex(h => h.includes(target));
+      if (idx !== -1) return { idx, matchedBy: syn };
+      if (target.length > 4) {
+        idx = norm.findIndex(h => h.length > 4 && target.includes(h));
+        if (idx !== -1) return { idx, matchedBy: syn };
+      }
+    }
+    return { idx: -1, matchedBy: null };
+  }
+
+  function findHeaderAndCols(data, wantedKeys, synonymsMap, forceSynonyms) {
+    let best = { rowIdx: -1, cols: null, score: -1 };
+    for (let r = 0; r < Math.min(10, data.length); r++) {
+      const row = data[r] || [];
+      const cols = {};
+      let score = 0;
+      for (const key of wantedKeys) {
+        const manual = (forceSynonyms && forceSynonyms[key]) || '';
+        const base = synonymsMap[key] || [];
+        const synonyms = manual ? [manual, ...base] : base;
+        const { idx, matchedBy } = findColBySynonyms(row, synonyms);
+        cols[key] = { idx, matchedBy };
+        if (idx !== -1) score++;
+      }
+      if (score > best.score) best = { rowIdx: r, cols, score };
+    }
+    return best;
+  }
+
+  function pickBestSheet(wb, wantedKeys, synonymsMap, forceSynonyms) {
+    let best = null;
+    for (const sheetName of wb.SheetNames) {
+      const sheet = wb.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+      const found = findHeaderAndCols(data, wantedKeys, synonymsMap, forceSynonyms);
+      if (!best || found.score > best.score) {
+        best = { sheet: sheetName, rowIdx: found.rowIdx,
+          cols: found.cols, score: found.score, data };
+      }
+    }
+    return best;
+  }
+
+  function wireDrop(dropId, inputId, cb, isCsv) {
+    const drop = $(dropId), input = $(inputId);
+    drop.onclick = () => input.click();
+    input.onchange = e => { if (e.target.files[0]) readFile(e.target.files[0], cb, isCsv); };
+    ['dragover','dragleave','drop'].forEach(ev => {
+      drop.addEventListener(ev, e => {
+        e.preventDefault();
+        if (ev === 'dragover') drop.classList.add('hover');
+        if (ev === 'dragleave') drop.classList.remove('hover');
+        if (ev === 'drop') {
+          drop.classList.remove('hover');
+          if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0], cb, isCsv);
+        }
+      });
+    });
+  }
+
+  function readFile(file, cb, isCsv) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        if (isCsv) {
+          const buf = e.target.result;
+          let text = new TextDecoder('utf-8').decode(buf);
+          if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+          cb(text, file.name);
+        } else {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          cb(wb, file.name);
+        }
+      } catch (err) {
+        log('❌ Ошибка чтения: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  wireDrop('dropSite', 'fileSite', (text, name) => {
+    csvSiteText = text;
+    $('dropSite').classList.add('done');
+    $('dropSiteText').innerHTML = '✅ <b>' + name + '</b>';
+    log('🅰️ CSV сайта: ' + name, true);
+    updateBtn();
+  }, true);
+
+  wireDrop('dropWbChars', 'fileWbChars', (wb, name) => {
+    wbChars = wb;
+    $('dropWbChars').classList.add('done');
+    $('dropWbCharsText').innerHTML = '✅ <b>' + name + '</b>';
+    log('📋 WB — Общие характеристики: ' + name);
+    updateBtn();
+  }, false);
+
+  wireDrop('dropWbPrices', 'fileWbPrices', (wb, name) => {
+    wbPrices = wb;
+    $('dropWbPrices').classList.add('done');
+    $('dropWbPricesText').innerHTML = '✅ <b>' + name + '</b>';
+    log('💰 WB — Обновление цен: ' + name);
+    updateBtn();
+  }, false);
+
+  function updateBtn() {
+    $('runBtn').disabled = !(csvSiteText && wbChars && wbPrices);
+  }
+
+  function logFound(label, sheetName, headerRowIdx, cols, keyLabels) {
+    log('');
+    log('  → ' + label + ': лист «' + sheetName + '», шапка в строке ' +
+        (headerRowIdx + 1));
+    for (const key of Object.keys(keyLabels)) {
+      const c = cols[key];
+      if (!c || c.idx === -1) {
+        log('    ❌ ' + keyLabels[key] + ' — не найдена');
+      } else {
+        let letter = '';
+        let n = c.idx;
+        while (n >= 0) {
+          letter = String.fromCharCode((n % 26) + 65) + letter;
+          n = Math.floor(n / 26) - 1;
+        }
+        log('    ✅ ' + keyLabels[key] + ' — колонка ' + letter +
+            ' (найдено по «' + c.matchedBy + '»)');
+      }
+    }
+  }
+
+  // ==== CSV сайта ====
+  function parseSiteCsv(text) {
+    const delim = detectDelimiter(text);
+    const rows = parseCSV(text, delim);
+    if (rows.length < 2) return null;
+
+    let headerIdx = -1;
+    for (let r = 0; r < Math.min(10, rows.length); r++) {
+      const found = findColBySynonyms(rows[r], SITE_SYNONYMS.name);
+      if (found.idx !== -1) { headerIdx = r; break; }
+    }
+    if (headerIdx === -1) return null;
+
+    const force = {
+      name:  $('siteColName').value.trim(),
+      code:  $('siteColCode').value.trim(),
+      idArt: $('siteColIdArt').value.trim(),
+      price: $('siteColPrice').value.trim(),
+    };
+    const found = findHeaderAndCols(rows, ['name','code','idArt','price'],
+      SITE_SYNONYMS, force);
+
+    return { sheet: 'CSV', rowIdx: headerIdx, cols: found.cols, data: rows };
+  }
+
+  // ==== WB сводка ====
+  function buildWbSummary(wbChars, wbPrices) {
+    const chars = pickBestSheet(wbChars,
+      ['charsArticle', 'charsNmId', 'charsName'], WB_SYNONYMS, {});
+    logFound('WB — Общие характеристики', chars.sheet, chars.rowIdx, chars.cols, {
+      charsArticle: 'Артикул продавца',
+      charsNmId: 'Артикул WB (nmID)',
+      charsName: 'Наименование',
+    });
+
+    if (!chars.cols.charsNmId || chars.cols.charsNmId.idx === -1) {
+      log('❌ WB: не найден «Артикул WB».');
+      return null;
+    }
+    if (!chars.cols.charsArticle || chars.cols.charsArticle.idx === -1) {
+      log('❌ WB: не найден «Артикул продавца».');
+      return null;
+    }
+    if (!chars.cols.charsName || chars.cols.charsName.idx === -1) {
+      log('❌ WB: не найден «Наименование».');
+      return null;
+    }
+
+    const prices = pickBestSheet(wbPrices,
+      ['pricesNmId', 'pricesPrice'], WB_SYNONYMS, {});
+    logFound('WB — Обновление цен', prices.sheet, prices.rowIdx, prices.cols, {
+      pricesNmId: 'Артикул WB (nmID)',
+      pricesPrice: 'Цена (Текущая цена)',
+    });
+
+    if (!prices.cols.pricesNmId || prices.cols.pricesNmId.idx === -1) {
+      log('❌ WB: не найден «Артикул WB» в ценах.');
+      return null;
+    }
+    if (!prices.cols.pricesPrice || prices.cols.pricesPrice.idx === -1) {
+      log('❌ WB: не найдена «Текущая цена».');
+      return null;
+    }
+
+    function findStart(data, headerRowIdx, keyIdx) {
+      for (let r = headerRowIdx + 1; r < data.length; r++) {
+        const row = data[r] || [];
+        const v = toStr(row[keyIdx]);
+        if (!v) continue;
+        const nv = normHeader(v);
+        if (nv === 'артикул wb') continue;
+        if (nv === 'nmid') continue;
+        if (nv === 'наименование') continue;
+        if (nv === 'артикул продавца') continue;
+        return r;
+      }
+      return headerRowIdx + 1;
+    }
+
+    const charsStart = findStart(chars.data, chars.rowIdx, chars.cols.charsNmId.idx);
+    const pricesStart = findStart(prices.data, prices.rowIdx, prices.cols.pricesNmId.idx);
+
+    const charsMap = new Map();
+    const charsOrder = [];
+    for (let i = charsStart; i < chars.data.length; i++) {
+      const row = chars.data[i] || [];
+      const nmId = toStr(row[chars.cols.charsNmId.idx]);
+      const name = toStr(row[chars.cols.charsName.idx]);
+      const articleRaw = toStr(row[chars.cols.charsArticle.idx]);
+      if (!nmId || !name) continue;
+      if (charsMap.has(nmId)) continue;
+
+      // Чистим артикул WB от склеек
+      const article = cleanWbArticle(articleRaw);
+
+      charsMap.set(nmId, { article, articleRaw, name });
+      charsOrder.push(nmId);
+    }
+
+    const pricesMap = new Map();
+    for (let i = pricesStart; i < prices.data.length; i++) {
+      const row = prices.data[i] || [];
+      const nmId = toStr(row[prices.cols.pricesNmId.idx]);
+      if (!nmId) continue;
+      if (pricesMap.has(nmId)) continue;
+      const price = toStr(row[prices.cols.pricesPrice.idx]);
+      pricesMap.set(nmId, { price });
+    }
+
+    const items = [];
+    for (const nmId of charsOrder) {
+      const ch = charsMap.get(nmId);
+      const pr = pricesMap.get(nmId);
+      const price = pr ? pr.price : '';
+      items.push({
+        article: ch.article,
+        articleRaw: ch.articleRaw,
+        articleNorm: normalizeArticle(ch.article),
+        nmId,
+        name: ch.name,
+        nameNorm: normalizeName(ch.name),
+        priceStr: price,
+        priceNum: parsePrice(price),
+      });
+    }
+    return items;
+  }
+
+  // ==== ГЛАВНАЯ ОБРАБОТКА ====
+  $('runBtn').onclick = () => {
+    if (!(csvSiteText && wbChars && wbPrices)) return;
+
+    log('', true);
+    log('=== Сравнение ALBOMMONET.RU ↔ Wildberries (двухпроходный матчинг) ===');
+
+    const thresholdArtPct = parseFloat($('thresholdArt').value) || 90;
+    const thresholdArt = thresholdArtPct / 100;
+    const thresholdNamePct = parseFloat($('thresholdName').value) || 70;
+    const thresholdName = thresholdNamePct / 100;
+    log('Проход 1 (артикул): порог ' + thresholdArtPct + ' %');
+    log('Проход 2 (название): порог ' + thresholdNamePct + ' %');
+
+    // ==== 1. CSV сайта ====
+    log('');
+    log('🅰️ ALBOMMONET.RU (CSV)');
+    const site = parseSiteCsv(csvSiteText);
+    if (!site) {
+      log('❌ Не удалось разобрать CSV сайта.');
+      return;
+    }
+    logFound('ALBOMMONET.RU', site.sheet, site.rowIdx, site.cols, {
+      name: 'Наименование',
+      code: 'Код артикула',
+      idArt: 'ID артикула',
+      price: 'Зачеркнутая цена',
+    });
+
+    if (!site.cols.idArt || site.cols.idArt.idx === -1) {
+      log('❌ На сайте: не найден «ID артикула».');
+      return;
+    }
+    if (!site.cols.code || site.cols.code.idx === -1) {
+      log('❌ На сайте: не найден «Код артикула».');
+      return;
+    }
+    if (!site.cols.name || site.cols.name.idx === -1) {
+      log('❌ На сайте: не найдено «Наименование».');
+      return;
+    }
+
+    const siteStart = site.rowIdx + 1;
+    const siteItems = [];
+    for (let i = siteStart; i < site.data.length; i++) {
+      const row = site.data[i] || [];
+      const idArt = toStr(row[site.cols.idArt.idx]);
+      if (!idArt) continue;
+      const name = toStr(row[site.cols.name.idx]);
+      const code = toStr(row[site.cols.code.idx]);
+      if (!code) continue;
+      const price = site.cols.price && site.cols.price.idx !== -1
+        ? toStr(row[site.cols.price.idx]) : '';
+      siteItems.push({
+        idArt, code, name,
+        articleNorm: normalizeArticle(code),
+        nameNorm: normalizeName(name),
+        priceStr: price,
+        priceNum: parsePrice(price),
+      });
+    }
+    log('  Позиций сайта: ' + siteItems.length);
+
+    // ==== 2. WB ====
+    log('');
+    log('🟪 Wildberries — магазин №1');
+    const wbItems = buildWbSummary(wbChars, wbPrices);
+    if (!wbItems) return;
+    log('  Позиций WB: ' + wbItems.length);
+
+    // ==== 3. ПРОХОД 1 — по артикулу ====
+    log('');
+    log('=== Проход 1: сопоставление по артикулу (порог ' + thresholdArtPct + ' %) ===');
+
+    const usedWb = new Set();
+    const matches = [];
+
+    for (let i = 0; i < siteItems.length; i++) {
+      const a = siteItems[i];
+      let bestJ = -1, bestScore = 0;
+      for (let j = 0; j < wbItems.length; j++) {
+        if (usedWb.has(j)) continue;
+        const s = similarity(a.articleNorm, wbItems[j].articleNorm);
+        if (s > bestScore) { bestScore = s; bestJ = j; }
+      }
+      if (bestJ !== -1 && bestScore >= thresholdArt) {
+        usedWb.add(bestJ);
+        matches.push({ a, b: wbItems[bestJ], score: bestScore, method: 'art' });
+      }
+    }
+
+    log('Проход 1 нашёл пар: ' + matches.length);
+
+    // ==== 4. ПРОХОД 2 — по названию для несовпавших ====
+    log('');
+    log('=== Проход 2: сопоставление по названию (порог ' + thresholdNamePct + ' %) ===');
+
+    const matchedSiteIds = new Set(matches.map(m => m.a.idArt));
+    const siteRest = siteItems.filter(s => !matchedSiteIds.has(s.idArt));
+    log('Осталось товаров сайта без пары: ' + siteRest.length);
+
+    const matches2 = [];
+    for (let i = 0; i < siteRest.length; i++) {
+      const a = siteRest[i];
+      let bestJ = -1, bestScore = 0;
+      for (let j = 0; j < wbItems.length; j++) {
+        if (usedWb.has(j)) continue;
+        const s = similarity(a.nameNorm, wbItems[j].nameNorm);
+        if (s > bestScore) { bestScore = s; bestJ = j; }
+      }
+      if (bestJ !== -1 && bestScore >= thresholdName) {
+        usedWb.add(bestJ);
+        matches2.push({ a, b: wbItems[bestJ], score: bestScore, method: 'name' });
+      }
+    }
+
+    log('Проход 2 нашёл пар: ' + matches2.length);
+
+    const allMatches = matches.concat(matches2);
+
+    log('');
+    log('ВСЕГО сопоставлено: ' + allMatches.length + ' из ' + siteItems.length);
+    log('  🎯 по артикулу: ' + matches.length);
+    log('  📊 по названию: ' + matches2.length);
+
+    // ==== 5. Отчёт ====
+    resultRows = [[
+      'ID артикула',
+      'Артикул продавца WB',
+      'Код артикула',
+      'ID WB (nmID)',
+      'Название (сайт)',
+      'Название WB',
+      'Цена сайта',
+      'Цена WB',
+      'Разница ₽',
+      'Разница %',
+      'Статус',
+      'Способ',
+      'Точность %',
+    ]];
+
+    let eqCount = 0, upCount = 0, downCount = 0;
+
+    allMatches.sort((x, y) => y.score - x.score);
+    for (const m of allMatches) {
+      const p1 = m.a.priceNum;
+      const p2 = m.b.priceNum;
+      let status = '', diffRub = '', diffPct = '';
+
+      if (p1 != null && p2 != null) {
+        const d = p2 - p1;
+        const pct = p1 ? (d / p1 * 100) : 0;
+        diffRub = Math.round(d);
+        diffPct = Number(pct.toFixed(1));
+        if (d === 0) { status = '🟢 Совпадает'; eqCount++; }
+        else if (d > 0) { status = '🟡 WB дороже на ' + Math.round(d) + ' ₽'; upCount++; }
+        else { status = '🔴 WB дешевле на ' + Math.abs(Math.round(d)) + ' ₽'; downCount++; }
+      } else {
+        status = '⚪ Нет цены';
+      }
+
+      const methodLabel = m.method === 'art'
+        ? '🎯 по артикулу'
+        : '📊 по названию';
+
+      resultRows.push([
+        m.a.idArt,
+        m.b.article,
+        m.a.code,
+        m.b.nmId,
+        m.a.name,
+        m.b.name,
+        m.a.priceStr,
+        m.b.priceStr,
+        diffRub,
+        diffPct,
+        status,
+        methodLabel,
+        Math.round(m.score * 100) + ' %',
+      ]);
+    }
+
+    // только на сайте
+    const matchedSite = new Set(allMatches.map(m => m.a.idArt));
+    let orphanSite = 0;
+    for (const it of siteItems) {
+      if (matchedSite.has(it.idArt)) continue;
+      resultRows.push([
+        it.idArt, '', it.code, '',
+        it.name, '',
+        it.priceStr, '',
+        '', '', '⚪ Только на сайте', '', 'нет пары',
+      ]);
+      orphanSite++;
+    }
+
+    // только на WB
+    const matchedWb = new Set(allMatches.map(m => m.b.nmId));
+    let orphanWb = 0;
+    for (const it of wbItems) {
+      if (matchedWb.has(it.nmId)) continue;
+      resultRows.push([
+        '', it.article, '', it.nmId,
+        '', it.name,
+        '', it.priceStr,
+        '', '', '⚪ Только на WB', '', 'нет пары',
+      ]);
+      orphanWb++;
+    }
+
+    log('');
+    log('=== ИТОГО ===');
+    log('  Парных: ' + allMatches.length);
+    log('  🟢 Совпадает: ' + eqCount);
+    log('  🟡 WB дороже: ' + upCount);
+    log('  🔴 WB дешевле: ' + downCount);
+    log('  ⚪ Только на сайте: ' + orphanSite);
+    log('  ⚪ Только на WB: ' + orphanWb);
+
+    renderPreview(resultRows);
+    renderSummary(siteItems.length, wbItems.length, allMatches.length,
+                  matches.length, matches2.length,
+                  eqCount, upCount, downCount, orphanSite, orphanWb);
+    $('preview').classList.add('active');
+    log('');
+    log('✅ Готово. Нажмите «Скачать полный результат».');
+  };
+
+  function renderPreview(rows) {
+    const table = $('previewTable');
+    const head = rows[0];
+    const body = rows.slice(1, 31);
+    let html = '<thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
+      '</tr></thead><tbody>';
+    for (const r of body) {
+      const status = String(r[10] || '');
+      let cls = '';
+      if (status.indexOf('Совпадает') !== -1) cls = 's-eq';
+      else if (status.indexOf('дороже') !== -1) cls = 's-up';
+      else if (status.indexOf('дешевле') !== -1) cls = 's-down';
+      else if (status.indexOf('Только') !== -1 || status.indexOf('Нет') !== -1) cls = 's-orphan';
+      html += '<tr class="' + cls + '">' +
+        r.map(v => '<td title="' + String(v).replace(/"/g, '&quot;') + '">' +
+          String(v) + '</td>').join('') + '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  function renderSummary(nSite, nWb, all, art, name, eq, up, down, orSite, orWb) {
+    $('summary').innerHTML =
+      '<span class="stat">Товаров на сайте: <span class="num">' + nSite + '</span></span>' +
+      '<span class="stat">Товаров на WB: <span class="num">' + nWb + '</span></span><br>' +
+      '<span class="stat">Сопоставлено: <span class="num">' + all + '</span></span> ' +
+      '(<span class="method-chip method-art">🎯 ' + art + '</span> ' +
+      '<span class="method-chip method-name">📊 ' + name + '</span>)<br>' +
+      '<span class="stat eq">🟢 Совпадает: <span class="num">' + eq + '</span></span>' +
+      '<span class="stat up">🟡 WB дороже: <span class="num">' + up + '</span></span>' +
+      '<span class="stat down">🔴 WB дешевле: <span class="num">' + down + '</span></span><br>' +
+      '<span class="stat">⚪ Только на сайте: <span class="num">' + orSite + '</span></span>' +
+      '<span class="stat">⚪ Только на WB: <span class="num">' + orWb + '</span></span>';
+  }
+
+  $('downloadBtn').onclick = () => {
+    if (!resultRows.length) return;
+    const ws = XLSX.utils.aoa_to_sheet(resultRows);
+    ws['!cols'] = [
+      {wch:14}, {wch:26}, {wch:22}, {wch:16},
+      {wch:52}, {wch:52}, {wch:12}, {wch:12},
+      {wch:12}, {wch:12}, {wch:34}, {wch:16}, {wch:12},
+    ];
+    ws['!autofilter'] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: resultRows.length - 1, c: 12 }
+      })
+    };
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Сравнение');
+
+    const outName = 'сравнение_ALBOMMONET_WB_умный_' +
+      new Date().toISOString().slice(0,10) + '.xlsx';
+    XLSX.writeFile(wb, outName);
+    log('✅ Скачан: ' + outName);
+  };
+
+})();
+</script>
+</body>
+</html>

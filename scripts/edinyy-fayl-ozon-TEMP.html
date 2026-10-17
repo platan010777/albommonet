@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Единый файл: Ozon — локальный скрипт</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" href="data:,">
+<style>
+  .warn {
+    background: #fff8e0; border-left: 4px solid #FFC700; padding: 12px 16px;
+    border-radius: 8px; font-size: 14px; margin-bottom: 24px;
+  }
+  .howto-box {
+    background: #f0f7ff; border-left: 4px solid #4a90e2;
+    border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 24px; font-size: 14px; line-height: 1.6;
+  }
+  .howto-box h4 { margin: 0 0 10px; font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .howto-box ol { margin: 8px 0 0 22px; padding: 0; }
+  .howto-box li { margin: 4px 0; }
+  .howto-box code {
+    background: #dcebfd; color: #1a4b85; padding: 2px 6px;
+    border-radius: 4px; font-size: 13px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .step-title {
+    font-size: 17px; font-weight: 700; margin: 28px 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-title .num {
+    display: inline-flex; width: 30px; height: 30px;
+    background: #005bff; color: #fff; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 15px;
+    font-weight: 700; flex-shrink: 0;
+  }
+  .step-desc {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 14px;
+    padding-left: 40px;
+  }
+  .step-desc b { color: #1a1a1a; }
+  .shop-block {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+    border-left: 5px solid #FFC700;
+  }
+  .shop-block.ozon { border-left-color: #005bff; }
+  .shop-block h3 {
+    margin: 0 0 4px; font-size: 17px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .shop-block .shop-sub {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 16px;
+  }
+  .shop-block .num-circle {
+    display: inline-flex; width: 28px; height: 28px;
+    background: #FFC700; color: #1a1a1a; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 14px;
+    font-weight: 700; flex-shrink: 0;
+  }
+  .shop-block.ozon .num-circle { background: #005bff; color: #fff; }
+  .drop {
+    border: 2px dashed #c5c5c5; border-radius: 10px;
+    padding: 20px 16px; text-align: center; cursor: pointer;
+    transition: .15s; background: #fafafa; margin-bottom: 10px;
+  }
+  .drop:hover, .drop.hover { border-color: #005bff; background: #f0f7ff; }
+  .shop-block .drop:hover,
+  .shop-block .drop.hover { border-color: #005bff; background: #f0f7ff; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop .icon { font-size: 24px; margin-bottom: 6px; line-height: 1; }
+  .drop .title { font-size: 14px; font-weight: 600; }
+  .drop small { display: block; color: #999; margin-top: 6px; font-size: 12px; }
+  .settings {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .settings h4 { margin: 0 0 14px; font-size: 14px; color: #444; font-weight: 600; }
+  .settings-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .field input {
+    padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; font-family: inherit;
+  }
+  .field input:focus { outline: none; border-color: #005bff; }
+  #log {
+    margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+    white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+    max-height: 420px; overflow-y: auto; display: none;
+  }
+  #log.active { display: block; }
+  #preview { display: none; margin-top: 20px; }
+  #preview.active { display: block; }
+  table.preview { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.preview th, table.preview td {
+    padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left;
+    white-space: nowrap; overflow: hidden; max-width: 220px; text-overflow: ellipsis;
+  }
+  table.preview th { background: #f5f5f5; font-weight: 600; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.4px; }
+  table.preview tr.s-l1 { background: #f4fbf7; }
+  table.preview tr.s-l2 { background: #f0fff4; }
+  table.preview tr.s-l3 { background: #e6f7ff; }
+  table.preview tr.s-orphan { background: #f0f0f0; color: #666; }
+  .summary {
+    margin-top: 16px; padding: 14px 18px; background: #f7f9fc;
+    border-radius: 8px; font-size: 14px; line-height: 1.7;
+  }
+  .summary .stat { display: inline-block; margin-right: 20px; }
+  .summary .num { font-weight: 700; color: #005bff; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px;
+    font-size: 12.5px; color: #555;
+  }
+  .legend .li { display: flex; align-items: center; gap: 6px; }
+  .legend .square {
+    display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+  }
+  .legend .sq-l1 { background: #c8f1d6; }
+  .legend .sq-l2 { background: #d4f5dd; }
+  .legend .sq-l3 { background: #bde5ff; }
+  .legend .sq-orphan { background: #dcdcdc; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./index.html" class="active">Сравнения</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <a href="./index.html" style="display:inline-block; font-size:13px; color:var(--primary); text-decoration:none; margin-bottom:16px;">← Все скрипты</a>
+
+  <h1 class="page-title">💠 Единый файл: сайт + Ozon</h1>
+  <p class="page-lead">
+    Матчинг <b>только по артикулу</b>. Три уровня:
+    <b>ур.1 — срезаем /АЭ</b>, <b>ур.2 — плюс один символ</b>,
+    <b>ур.3 — плюс два символа</b>. Больше ничего.
+  </p>
+
+  <div class="warn">
+    🔒 Всё считается прямо в браузере. Файлы никуда не отправляются.<br>
+    💡 <b>Локальный скрипт.</b> Не публикуется на GitHub. Запуск через Live Server.
+  </div>
+
+  <div class="howto-box">
+    <h4>📋 Что загружаем</h4>
+    <ol>
+      <li><b>CSV сайта ALBOMMONET.RU</b> — эталон (ID артикула, Код артикула, Наименование).</li>
+      <li><b>Шаблон Ozon</b> — из него берём артикул, SKU, название товара.</li>
+    </ol>
+  </div>
+
+  <!-- ============ ШАГ 1 ============ -->
+  <div class="step-title">
+    <span class="num">1</span>
+    CSV сайта ALBOMMONET.RU
+  </div>
+  <div class="step-desc">
+    Свежая выгрузка из админки сайта. Разделитель <code>;</code>, кодировка UTF-8.
+  </div>
+
+  <div class="shop-block">
+    <h3><span class="num-circle">A</span> ALBOMMONET.RU</h3>
+    <div class="shop-sub">Выгрузка товаров с сайта</div>
+
+    <div class="drop" id="dropSite">
+      <div class="icon">🅰️</div>
+      <div class="title">CSV сайта</div>
+      <div id="dropSiteText"><small>📁 .csv или нажмите для выбора</small></div>
+      <input type="file" id="fileSite" accept=".csv,.txt" hidden>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 2 ============ -->
+  <div class="step-title">
+    <span class="num">2</span>
+    Шаблон Ozon
+  </div>
+  <div class="step-desc">
+    Скачай свежий шаблон из ЛК Ozon. Нужны колонки:
+    <b>Артикул</b>, <b>SKU</b>, <b>Название товара</b>.
+  </div>
+
+  <div class="shop-block ozon">
+    <h3><span class="num-circle">O</span> Ozon</h3>
+    <div class="shop-sub">Шаблон обновления цен из ЛК Ozon</div>
+
+    <div class="drop" id="dropOzon">
+      <div class="icon">💠</div>
+      <div class="title">Шаблон Ozon</div>
+      <div id="dropOzonText"><small>📁 .xlsx или нажмите для выбора</small></div>
+      <input type="file" id="fileOzon" accept=".xls,.xlsx" hidden>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 3 ============ -->
+  <div class="step-title">
+    <span class="num">3</span>
+    Точные названия колонок (опционально)
+  </div>
+
+  <div class="settings">
+    <div class="settings-grid">
+      <div class="field">
+        <label>Сайт: ID артикула</label>
+        <input type="text" id="siteColIdArt" placeholder="ID артикула">
+      </div>
+      <div class="field">
+        <label>Сайт: Код артикула</label>
+        <input type="text" id="siteColCode" placeholder="Код артикула">
+      </div>
+      <div class="field">
+        <label>Сайт: Наименование</label>
+        <input type="text" id="siteColName" placeholder="Наименование">
+      </div>
+    </div>
+  </div>
+
+  <button id="runBtn" class="btn" disabled style="background:#005bff;">▶ Сопоставить и скачать</button>
+
+  <div id="log"></div>
+
+  <div id="preview">
+    <h3 style="margin-bottom:12px;">Предпросмотр (первые 30 строк)</h3>
+    <div style="overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px;">
+      <table class="preview" id="previewTable"></table>
+    </div>
+    <div class="legend">
+      <div class="li"><span class="square sq-l1"></span> Уровень 1: срезали /АЭ</div>
+      <div class="li"><span class="square sq-l2"></span> Уровень 2: срезали 1 символ</div>
+      <div class="li"><span class="square sq-l3"></span> Уровень 3: срезали 2 символа</div>
+      <div class="li"><span class="square sq-orphan"></span> Нет пары</div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div style="margin-top:16px;">
+      <button id="downloadBtn" class="btn" style="background:#005bff;">⬇️ Скачать полный результат (xlsx)</button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+
+  let csvSiteText = '';
+  let wbOzon = null;
+  let fileNameSite = '', fileNameOzon = '';
+  let resultRows = [];
+
+  // ===== Синонимы колонок =====
+  const SITE_SYNONYMS = {
+    idArt: ['id артикула', 'id статьи', 'ид артикула'],
+    code:  ['код артикула', 'наименование артикула', 'артикул продавца', 'артикул'],
+    name:  ['наименование', 'название', 'название товара'],
+  };
+
+  const OZON_SYNONYMS = {
+    article: ['артикул', 'артикул продавца', 'offer_id', 'offer id'],
+    sku:     ['sku', 'ozon sku', 'ozon id', 'id товара'],
+    name:    ['название товара', 'наименование', 'название', 'товар'],
+  };
+
+  const SKIP_VALUES = new Set([
+    'нередактируемое', 'не редактируемое',
+    'артикул', 'sku', 'название товара', 'наименование',
+  ]);
+
+  // ===== Утилиты =====
+  function log(msg, clear) {
+    if (clear) logEl.textContent = '';
+    logEl.textContent += msg + '\n';
+    logEl.classList.add('active');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function normHeader(s) {
+    return String(s == null ? '' : s)
+      .replace(/^\uFEFF/, '')
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[\s\u00a0\u200b]+/g, ' ')
+      .replace(/[.,;:!?()[\]{}«»"'`]/g, '')
+      .trim();
+  }
+
+  // ===== Приведение артикула =====
+
+  // Общая часть для всех уровней
+  function baseArticle(s) {
+    let t = String(s || '').toLowerCase();
+    t = t.replace(/^\uFEFF/, '');
+    t = t.replace(/ё/g, 'е').replace(/й/g, 'и');
+    t = t.replace(/[–—−]/g, '-');
+    t = t.replace(/[\s\u00a0\u200b]+/g, '');
+    return t;
+  }
+
+  // Уровень 1: срезаем /АЭ, _АЭ, -АЭ в конце
+  function artLevel1(s) {
+    let t = baseArticle(s);
+    t = t.replace(/[\/_\-\s]аэ\s*$/i, '');
+    return t;
+  }
+
+  // Уровень 2: уровень 1 + срезаем последний символ
+  function artLevel2(s) {
+    let t = artLevel1(s);
+    if (t.length > 0) t = t.slice(0, -1);
+    return t;
+  }
+
+  // Уровень 3: уровень 1 + срезаем два последних символа
+  function artLevel3(s) {
+    let t = artLevel1(s);
+    if (t.length > 0) t = t.slice(0, -1);
+    if (t.length > 0) t = t.slice(0, -1);
+    return t;
+  }
+
+  function toStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v.trim();
+    return String(v).trim();
+  }
+
+  // ===== CSV-парсер =====
+  function detectDelimiter(text) {
+    const firstLine = text.split(/\r?\n/)[0] || '';
+    const counts = {
+      ';': (firstLine.match(/;/g) || []).length,
+      ',': (firstLine.match(/,/g) || []).length,
+      '\t': (firstLine.match(/\t/g) || []).length,
+      '|': (firstLine.match(/\|/g) || []).length,
+    };
+    let best = ';', max = 0;
+    for (const k of Object.keys(counts)) {
+      if (counts[k] > max) { max = counts[k]; best = k; }
+    }
+    return best;
+  }
+
+  function parseCSV(text, delim) {
+    const rows = [];
+    let row = [], field = '', inQuotes = false, i = 0;
+    while (i < text.length) {
+      const ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+          inQuotes = false; i++; continue;
+        }
+        field += ch; i++;
+      } else {
+        if (ch === '"') { inQuotes = true; i++; continue; }
+        if (ch === delim) { row.push(field); field = ''; i++; continue; }
+        if (ch === '\r') { i++; continue; }
+        if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+        field += ch; i++;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  // ===== Поиск колонок =====
+  function findColBySynonyms(headerRow, synonyms) {
+    if (!Array.isArray(synonyms)) return { idx: -1, matchedBy: null };
+    const norm = headerRow.map(normHeader);
+    for (const syn of synonyms) {
+      const target = normHeader(syn);
+      let idx = norm.findIndex(h => h === target);
+      if (idx !== -1) return { idx, matchedBy: syn };
+      idx = norm.findIndex(h => h.includes(target));
+      if (idx !== -1) return { idx, matchedBy: syn };
+      if (target.length > 4) {
+        idx = norm.findIndex(h => h.length > 4 && target.includes(h));
+        if (idx !== -1) return { idx, matchedBy: syn };
+      }
+    }
+    return { idx: -1, matchedBy: null };
+  }
+
+  function findHeaderAndCols(data, wantedKeys, synonymsMap, forceSynonyms) {
+    let best = { rowIdx: -1, cols: null, score: -1 };
+    for (let r = 0; r < Math.min(15, data.length); r++) {
+      const row = data[r] || [];
+      const cols = {};
+      let score = 0;
+      for (const key of wantedKeys) {
+        const manual = (forceSynonyms && forceSynonyms[key]) || '';
+        const base = synonymsMap[key] || [];
+        const synonyms = manual ? [manual, ...base] : base;
+        const { idx, matchedBy } = findColBySynonyms(row, synonyms);
+        cols[key] = { idx, matchedBy };
+        if (idx !== -1) score++;
+      }
+      if (score > best.score) best = { rowIdx: r, cols, score };
+    }
+    return best;
+  }
+
+  function pickBestSheet(wb, wantedKeys, synonymsMap, forceSynonyms) {
+    let best = null;
+    for (const sheetName of wb.SheetNames) {
+      const sheet = wb.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+      const found = findHeaderAndCols(data, wantedKeys, synonymsMap, forceSynonyms);
+      if (!best || found.score > best.score) {
+        best = { sheet: sheetName, rowIdx: found.rowIdx,
+          cols: found.cols, score: found.score, data };
+      }
+    }
+    return best;
+  }
+
+  function colLetter(idx) {
+    let letter = '', n = idx;
+    while (n >= 0) {
+      letter = String.fromCharCode((n % 26) + 65) + letter;
+      n = Math.floor(n / 26) - 1;
+    }
+    return letter;
+  }
+
+  function logFound(label, sheetName, headerRowIdx, cols, keyLabels) {
+    log('');
+    log('  → ' + label + ': лист «' + sheetName + '», шапка в строке ' +
+        (headerRowIdx + 1));
+    for (const key of Object.keys(keyLabels)) {
+      const c = cols[key];
+      if (!c || c.idx === -1) {
+        log('    ❌ ' + keyLabels[key] + ' — не найдена');
+      } else {
+        log('    ✅ ' + keyLabels[key] + ' — колонка ' + colLetter(c.idx) +
+            ' (найдено по «' + c.matchedBy + '»)');
+      }
+    }
+  }
+
+  // ===== Загрузка файлов =====
+  function wireDrop(dropId, inputId, cb, isCsv) {
+    const drop = $(dropId), input = $(inputId);
+    drop.onclick = () => input.click();
+    input.onchange = e => { if (e.target.files[0]) readFile(e.target.files[0], cb, isCsv); };
+    ['dragover','dragleave','drop'].forEach(ev => {
+      drop.addEventListener(ev, e => {
+        e.preventDefault();
+        if (ev === 'dragover') drop.classList.add('hover');
+        if (ev === 'dragleave') drop.classList.remove('hover');
+        if (ev === 'drop') {
+          drop.classList.remove('hover');
+          if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0], cb, isCsv);
+        }
+      });
+    });
+  }
+
+  function readFile(file, cb, isCsv) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        if (isCsv) {
+          const buf = e.target.result;
+          let text = new TextDecoder('utf-8').decode(buf);
+          if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+          cb(text, file.name);
+        } else {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          cb(wb, file.name);
+        }
+      } catch (err) {
+        log('❌ Ошибка чтения: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  wireDrop('dropSite', 'fileSite', (text, name) => {
+    csvSiteText = text;
+    fileNameSite = name;
+    $('dropSite').classList.add('done');
+    $('dropSiteText').innerHTML = '✅ <b>' + name + '</b>';
+    log('🅰️ CSV сайта: ' + name, true);
+    updateBtn();
+  }, true);
+
+  wireDrop('dropOzon', 'fileOzon', (wb, name) => {
+    wbOzon = wb;
+    fileNameOzon = name;
+    $('dropOzon').classList.add('done');
+    $('dropOzonText').innerHTML = '✅ <b>' + name + '</b><br><small>Лист: ' +
+      wb.SheetNames[0] + '</small>';
+    log('💠 Ozon: ' + name);
+    updateBtn();
+  }, false);
+
+  function updateBtn() {
+    $('runBtn').disabled = !(csvSiteText && wbOzon);
+  }
+
+  // ===== Парсинг CSV сайта =====
+  function parseSiteCsv(text) {
+    const delim = detectDelimiter(text);
+    const rows = parseCSV(text, delim);
+    if (rows.length < 2) return null;
+
+    const force = {
+      idArt: $('siteColIdArt').value.trim(),
+      code:  $('siteColCode').value.trim(),
+      name:  $('siteColName').value.trim(),
+    };
+
+    let headerIdx = -1;
+    for (let r = 0; r < Math.min(15, rows.length); r++) {
+      const idFound = findColBySynonyms(rows[r],
+        force.idArt ? [force.idArt, ...SITE_SYNONYMS.idArt] : SITE_SYNONYMS.idArt);
+      const nmFound = findColBySynonyms(rows[r],
+        force.name ? [force.name, ...SITE_SYNONYMS.name] : SITE_SYNONYMS.name);
+      if (idFound.idx !== -1 && nmFound.idx !== -1) { headerIdx = r; break; }
+    }
+    if (headerIdx === -1) return null;
+
+    const found = findHeaderAndCols(rows, ['idArt','code','name'],
+      SITE_SYNONYMS, force);
+
+    return { sheet: 'CSV', rowIdx: found.rowIdx, cols: found.cols, data: rows };
+  }
+
+  // ===== Парсинг Ozon =====
+  function parseOzon(wb) {
+    const found = pickBestSheet(wb,
+      ['article', 'sku', 'name'], OZON_SYNONYMS, {});
+    logFound('Ozon', found.sheet, found.rowIdx, found.cols, {
+      article: 'Артикул продавца',
+      sku: 'SKU Ozon',
+      name: 'Название товара',
+    });
+
+    if (!found.cols.article || found.cols.article.idx === -1) {
+      log('❌ Ozon: не найден «Артикул».');
+      return null;
+    }
+    if (!found.cols.sku || found.cols.sku.idx === -1) {
+      log('❌ Ozon: не найден «SKU».');
+      return null;
+    }
+
+    const items = [];
+    const seenSku = new Set();
+    for (let i = found.rowIdx + 1; i < found.data.length; i++) {
+      const row = found.data[i] || [];
+      const articleRaw = toStr(row[found.cols.article.idx]);
+      const sku = toStr(row[found.cols.sku.idx]);
+      if (!articleRaw || !sku) continue;
+
+      const nvArt = normHeader(articleRaw);
+      const nvSku = normHeader(sku);
+      if (SKIP_VALUES.has(nvArt) || SKIP_VALUES.has(nvSku)) continue;
+      if (seenSku.has(sku)) continue;
+      seenSku.add(sku);
+
+      const name = found.cols.name && found.cols.name.idx !== -1
+        ? toStr(row[found.cols.name.idx]) : '';
+
+      items.push({
+        article: articleRaw,
+        sku,
+        name,
+      });
+    }
+    return items;
+  }
+
+  // ===== Матчинг ТОЛЬКО по артикулу. 3 уровня =====
+  function matchAll(siteItems, ozonItems) {
+    const usedSite = new Set();
+    const usedOzon = new Set();
+    const matches = [];
+
+    const levels = [
+      { fn: artLevel1, name: 'ур.1 (/АЭ)',      score: 1.00 },
+      { fn: artLevel2, name: 'ур.2 (+1 симв.)', score: 0.99 },
+      { fn: artLevel3, name: 'ур.3 (+2 симв.)', score: 0.98 },
+    ];
+
+    const levelCounts = [0, 0, 0];
+
+    for (let li = 0; li < levels.length; li++) {
+      const lv = levels[li];
+
+      // Индекс Ozon по нормализованному артикулу (для этого уровня)
+      const ozonByArt = new Map();
+      for (let j = 0; j < ozonItems.length; j++) {
+        if (usedOzon.has(j)) continue;
+        const a = lv.fn(ozonItems[j].article);
+        if (!a) continue;
+        if (!ozonByArt.has(a)) ozonByArt.set(a, []);
+        ozonByArt.get(a).push(j);
+      }
+
+      for (let i = 0; i < siteItems.length; i++) {
+        if (usedSite.has(i)) continue;
+        const s = siteItems[i];
+        const a = lv.fn(s.code);
+        if (!a) continue;
+        const cand = ozonByArt.get(a);
+        if (!cand) continue;
+        const j = cand.find(x => !usedOzon.has(x));
+        if (j === undefined) continue;
+
+        usedSite.add(i);
+        usedOzon.add(j);
+        matches.push({
+          site: s,
+          ozon: ozonItems[j],
+          score: lv.score,
+          level: li + 1,
+          levelName: lv.name,
+        });
+        levelCounts[li]++;
+      }
+    }
+
+    return { matches, usedSite, usedOzon, levelCounts };
+  }
+
+  // ===== ГЛАВНАЯ ОБРАБОТКА =====
+  $('runBtn').onclick = () => {
+    if (!(csvSiteText && wbOzon)) return;
+
+    log('', true);
+    log('=== Сборка единого файла: сайт + Ozon ===');
+    log('Матчинг ТОЛЬКО по артикулу. Три уровня.');
+
+    // ==== 1. Сайт ====
+    log('');
+    log('🅰️ ALBOMMONET.RU (CSV)');
+    const site = parseSiteCsv(csvSiteText);
+    if (!site) { log('❌ Не удалось найти шапку CSV сайта.'); return; }
+    logFound('ALBOMMONET.RU', site.sheet, site.rowIdx, site.cols, {
+      idArt: 'ID артикула',
+      code: 'Код артикула',
+      name: 'Наименование',
+    });
+
+    if (!site.cols.idArt || site.cols.idArt.idx === -1) {
+      log('❌ Сайт: не найден «ID артикула».'); return;
+    }
+    if (!site.cols.code || site.cols.code.idx === -1) {
+      log('❌ Сайт: не найден «Код артикула».'); return;
+    }
+    if (!site.cols.name || site.cols.name.idx === -1) {
+      log('❌ Сайт: не найдено «Наименование».'); return;
+    }
+
+    const siteStart = site.rowIdx + 1;
+    const siteItems = [];
+    let skippedRows = 0;
+    for (let i = siteStart; i < site.data.length; i++) {
+      const row = site.data[i] || [];
+
+      const idArt = toStr(row[site.cols.idArt.idx]);
+      if (!idArt || !/^\d+$/.test(idArt)) { skippedRows++; continue; }
+
+      const code = toStr(row[site.cols.code.idx]);
+      if (!code) { skippedRows++; continue; }
+
+      const name = toStr(row[site.cols.name.idx]);
+      if (!name) { skippedRows++; continue; }
+
+      siteItems.push({ idArt, code, name });
+    }
+    log('  Позиций сайта: ' + siteItems.length +
+        (skippedRows ? ' (пропущено служебных строк: ' + skippedRows + ')' : ''));
+
+    // ==== 2. Ozon ====
+    log('');
+    log('💠 Ozon');
+    const ozonItems = parseOzon(wbOzon);
+    if (!ozonItems) return;
+    log('  Позиций Ozon: ' + ozonItems.length);
+
+    // ==== 3. Матчинг ====
+    log('');
+    log('=== Матчинг по артикулу (3 уровня) ===');
+    const r = matchAll(siteItems, ozonItems);
+    const matches = r.matches;
+    const usedSite = r.usedSite;
+    const usedOzon = r.usedOzon;
+
+    log('Найдено пар: ' + matches.length);
+    log('  ✨ уровень 1 (/АЭ):       ' + r.levelCounts[0]);
+    log('  ✨ уровень 2 (+1 симв.):  ' + r.levelCounts[1]);
+    log('  ✨ уровень 3 (+2 симв.):  ' + r.levelCounts[2]);
+
+    // ==== 4. Сборка отчёта ====
+    // Порядок колонок: SKU Ozon — второй.
+    resultRows = [[
+      'ID артикула',
+      'SKU Ozon',
+      'Код артикула (сайт)',
+      'Артикул продавца Ozon',
+      'Наименование Ozon',
+      'Наименование',
+      'Способ матчинга',
+      'Точность %',
+    ]];
+
+    matches.sort((x, y) => y.score - x.score);
+    for (const m of matches) {
+      resultRows.push([
+        m.site.idArt,
+        m.ozon.sku,
+        m.site.code,
+        m.ozon.article,
+        m.ozon.name,
+        m.site.name,
+        '✨ ' + m.levelName,
+        Math.round(m.score * 100) + ' %',
+      ]);
+    }
+
+    let orphanSite = 0;
+    for (let i = 0; i < siteItems.length; i++) {
+      if (usedSite.has(i)) continue;
+      const it = siteItems[i];
+      resultRows.push([
+        it.idArt, '', it.code, '', '', it.name, '⚪ Нет пары', 'нет пары',
+      ]);
+      orphanSite++;
+    }
+
+    let orphanOzon = 0;
+    for (let j = 0; j < ozonItems.length; j++) {
+      if (usedOzon.has(j)) continue;
+      const it = ozonItems[j];
+      resultRows.push([
+        '', it.sku, '', it.article, it.name, '', '⚪ Только в Ozon', 'нет пары',
+      ]);
+      orphanOzon++;
+    }
+
+    log('');
+    log('=== ИТОГО ===');
+    log('  Парных: ' + matches.length);
+    log('  ⚪ Сайт без пары: ' + orphanSite);
+    log('  ⚪ Ozon без пары: ' + orphanOzon);
+
+    renderPreview(resultRows);
+    renderSummary(siteItems.length, ozonItems.length, matches.length,
+                  r.levelCounts, orphanSite, orphanOzon);
+    $('preview').classList.add('active');
+    log('');
+    log('✅ Готово. Нажмите «Скачать полный результат».');
+  };
+
+  function renderPreview(rows) {
+    const table = $('previewTable');
+    const head = rows[0];
+    const body = rows.slice(1, 31);
+    let html = '<thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
+      '</tr></thead><tbody>';
+    for (const r of body) {
+      // «Способ матчинга» — 7-я колонка, индекс 6.
+      const method = String(r[6] || '');
+      let cls = '';
+      if (method.indexOf('ур.1') !== -1) cls = 's-l1';
+      else if (method.indexOf('ур.2') !== -1) cls = 's-l2';
+      else if (method.indexOf('ур.3') !== -1) cls = 's-l3';
+      else if (method.indexOf('Нет') !== -1 || method.indexOf('Только') !== -1) cls = 's-orphan';
+      html += '<tr class="' + cls + '">' +
+        r.map(v => '<td title="' + String(v).replace(/"/g, '&quot;') + '">' +
+          String(v) + '</td>').join('') + '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  function renderSummary(nSite, nOzon, total, levelCounts, orSite, orOzon) {
+    $('summary').innerHTML =
+      '<span class="stat">Товаров сайта: <span class="num">' + nSite + '</span></span>' +
+      '<span class="stat">Товаров Ozon: <span class="num">' + nOzon + '</span></span><br>' +
+      '<span class="stat">Сопоставлено: <span class="num">' + total + '</span></span> ' +
+      '(ур.1: ' + levelCounts[0] + ' · ур.2: ' + levelCounts[1] +
+      ' · ур.3: ' + levelCounts[2] + ')<br>' +
+      '<span class="stat">⚪ Сайт без пары: <span class="num">' + orSite + '</span></span>' +
+      '<span class="stat">⚪ Ozon без пары: <span class="num">' + orOzon + '</span></span>';
+  }
+
+  $('downloadBtn').onclick = () => {
+    if (!resultRows.length) return;
+    const ws = XLSX.utils.aoa_to_sheet(resultRows);
+    ws['!cols'] = [
+      {wch:14},  // 1 ID артикула
+      {wch:16},  // 2 SKU Ozon
+      {wch:26},  // 3 Код артикула (сайт)
+      {wch:26},  // 4 Артикул продавца Ozon
+      {wch:52},  // 5 Наименование Ozon
+      {wch:52},  // 6 Наименование
+      {wch:22},  // 7 Способ матчинга
+      {wch:12},  // 8 Точность %
+    ];
+    ws['!autofilter'] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: resultRows.length - 1, c: 7 }
+      })
+    };
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Единый файл Ozon');
+    const outName = 'edinyy_fayl_ozon_' +
+      new Date().toISOString().slice(0,10) + '.xlsx';
+    XLSX.writeFile(wb, outName);
+    log('✅ Скачан: ' + outName);
+  };
+
+})();
+</script>
+</body>
+</html>
