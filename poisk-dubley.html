@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Поиск дублей — ALBOMMONET.RU</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .warn { background: #e8f9ee; border-left: 4px solid #2ecc71; padding: 12px 16px;
+          border-radius: 8px; font-size: 14px; margin-bottom: 24px; }
+  .step { font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+  .drop { border: 2px dashed #c5c5c5; border-radius: 12px; padding: 36px 20px;
+          text-align: center; cursor: pointer; transition: .15s; background: #fff; margin-bottom: 16px; }
+  .drop:hover, .drop.hover { border-color: var(--primary); background: #f5f9ff; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop small { display: block; color: #999; margin-top: 8px; font-size: 12px; }
+  .settings { background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+              padding: 20px; margin-bottom: 20px; }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .field input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+                 font-size: 14px; font-family: inherit; }
+  .field input:focus { outline: none; border-color: var(--primary); }
+  .check { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; cursor: pointer; }
+  .check input { width: 18px; height: 18px; }
+  .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 12px; }
+  #log { margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+         border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+         white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+         max-height: 300px; overflow-y: auto; display: none; }
+  #log.active { display: block; }
+  #preview { display: none; margin-top: 20px; }
+  #preview.active { display: block; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { background: #f5f5f5; font-weight: 600; font-size: 12px; }
+  tr.is-dup { background: #fff5f5; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger"><span></span><span></span><span></span></button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./index.html" class="active">Сравнения</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <h1 class="page-title">🔍 Поиск дублей</h1>
+  <p class="page-lead">
+    Поиск повторяющихся строки по выбранной колонке или по всей строке целиком.
+    Отчёт покажет, какие позиции дублируются.
+  </p>
+
+  <div class="warn">🔒 Файл обрабатывается в браузере.</div>
+
+  <div class="step">1. Загрузите файл</div>
+  <div class="drop" id="drop">
+    <div id="dropText">📁 Перетащите .xlsx или нажмите
+      <small>Первый лист книги</small></div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+  </div>
+
+  <div class="step">2. Параметры поиска</div>
+  <div class="settings">
+    <div class="settings-grid">
+      <div class="field">
+        <label>Искать по колонке (буква)</label>
+        <input type="text" id="colName" value="A" maxlength="3">
+      </div>
+      <div class="field">
+        <label>Пропустить первые N строк</label>
+        <input type="text" id="skipRows" value="1" maxlength="3">
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="optWhole">
+      Искать по всей строке (а не по одной колонке)</label>
+    <label class="check"><input type="checkbox" id="optNormalize" checked>
+      Игнорировать регистр, пробелы, ё/е</label>
+    <label class="check"><input type="checkbox" id="optOnlyDup" checked>
+      Показывать только строки с дублями</label>
+  </div>
+
+  <button id="runBtn" class="btn" disabled>🔍 Найти дубли</button>
+  <div id="log"></div>
+
+  <div id="preview">
+    <h3 style="margin-bottom:12px;">Предпросмотр (первые 30 строк)</h3>
+    <div style="overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px;">
+      <table id="previewTable"></table>
+    </div>
+    <p class="text-muted" style="margin-top:12px; font-size:13px;">
+      Полный результат — в скачанном файле.
+    </p>
+    <div style="margin-top:16px;">
+      <button id="downloadBtn" class="btn">⬇️ Скачать результат</button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  let workbook = null, currentFileName = '', resultRows = [];
+
+  function log(msg, clear) {
+    const el = $('log');
+    if (clear) el.textContent = '';
+    el.textContent += msg + '\n';
+    el.classList.add('active');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function colLetterToIndex(letter) {
+    letter = String(letter || '').toUpperCase().trim();
+    if (!/^[A-Z]{1,3}$/.test(letter)) return null;
+    let n = 0;
+    for (const ch of letter) n = n * 26 + (ch.charCodeAt(0) - 64);
+    return n - 1;
+  }
+
+  function normalize(s, doNorm) {
+    s = String(s == null ? '' : s);
+    if (!doNorm) return s;
+    return s.toLowerCase().replace(/ё/g, 'е')
+      .replace(/[«»""'`]/g, '')
+      .replace(/[.,;:!?()[\]{}]/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  $('drop').onclick = () => $('fileInput').click();
+  $('fileInput').onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0]); };
+  ['dragover','dragleave','drop'].forEach(ev => {
+    $('drop').addEventListener(ev, e => {
+      e.preventDefault();
+      if (ev === 'dragover') $('drop').classList.add('hover');
+      if (ev === 'dragleave') $('drop').classList.remove('hover');
+      if (ev === 'drop') {
+        $('drop').classList.remove('hover');
+        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+      }
+    });
+  });
+
+  function handleFile(file) {
+    currentFileName = file.name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        workbook = XLSX.read(e.target.result, { type: 'array' });
+        $('drop').classList.add('done');
+        $('dropText').innerHTML = '✅ <b>' + file.name + '</b>';
+        $('runBtn').disabled = false;
+        log('Файл загружен: ' + file.name, true);
+      } catch (err) {
+        log('❌ ' + err.message, true);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  $('runBtn').onclick = () => {
+    if (!workbook) return;
+    log('=== Поиск дублей ===', true);
+
+    const skip = Math.max(0, parseInt($('skipRows').value, 10) || 0);
+    const colIdx = $('optWhole').checked ? null : colLetterToIndex($('colName').value);
+    const doNorm = $('optNormalize').checked;
+    const onlyDup = $('optOnlyDup').checked;
+
+    if (!colIdx && !$('optWhole').checked) {
+      log('❌ Проверьте букву колонки'); return;
+    }
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+
+    const header = data.slice(0, skip);
+    const body = data.slice(skip);
+
+    // считаем ключи
+    const counts = new Map();
+    body.forEach((row, i) => {
+      const key = $('optWhole').checked
+        ? row.map(v => normalize(v, doNorm)).join('\u0001')
+        : normalize(row[colIdx], doNorm);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+
+    // формируем отчёт
+    const report = [];
+    report.push([...header[0] || [], 'Ключ', 'Дублей в таблице', 'Номер строки в исходнике']);
+
+    body.forEach((row, i) => {
+      const key = $('optWhole').checked
+        ? row.map(v => normalize(v, doNorm)).join('\u0001')
+        : normalize(row[colIdx], doNorm);
+      const cnt = counts.get(key) || 1;
+      const isDup = cnt > 1;
+
+      if (onlyDup && !isDup) return;
+
+      report.push([
+        ...row,
+        key,
+        cnt,
+        i + skip + 1  // номер строки в исходном файле (1-based)
+      ]);
+    });
+
+    resultRows = report;
+    log('Строк проверено: ' + body.length);
+    log('Уникальных ключей: ' + counts.size);
+    log('Дублей найдено: ' + (body.length - counts.size));
+    log('Строк в отчёте: ' + (report.length - 1));
+
+    // показываем превью
+    const previewTable = $('previewTable');
+    const previewData = report.slice(0, 31); // заголовок + 30 строк
+    previewTable.innerHTML = previewData.map((row, ri) => {
+      const tag = ri === 0 ? 'th' : 'td';
+      const isDup = ri > 0 && Number(row[row.length - 2]) > 1;
+      const trCls = isDup ? ' class="is-dup"' : '';
+      return '<tr' + trCls + '>' +
+        row.map(v => '<' + tag + '>' + String(v).slice(0, 60) + '</' + tag + '>').join('') +
+        '</tr>';
+    }).join('');
+    $('preview').classList.add('active');
+
+    log('✅ Готово. Нажми «Скачать результат», чтобы получить xlsx.');
+  };
+
+  $('downloadBtn').onclick = () => {
+    if (!resultRows.length) return;
+    const ws = XLSX.utils.aoa_to_sheet(resultRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Дубли');
+    const outName = currentFileName.replace(/\.xlsx?$/i, '') + '_duplicates.xlsx';
+    XLSX.writeFile(wb, outName);
+    log('✅ Скачан: ' + outName);
+  };
+
+})();
+</script>
+</body>
+</html>

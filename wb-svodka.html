@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сводка WB: 2 файла → 1 таблица — ALBOMMONET.RU</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .warn {
+    background: #fde9f9; border-left: 4px solid #cb11ab; padding: 12px 16px;
+    border-radius: 8px; font-size: 14px; margin-bottom: 24px;
+  }
+  .step-title {
+    font-size: 17px; font-weight: 700; margin: 28px 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-title .num {
+    display: inline-flex; width: 30px; height: 30px;
+    background: #cb11ab; color: #fff; border-radius: 50%;
+    align-items: center; justify-content: center; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .step-desc {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 14px;
+    padding-left: 40px;
+  }
+  .step-desc b { color: #1a1a1a; }
+  .step-desc .file-name {
+    font-family: ui-monospace, Consolas, monospace;
+    background: #f0f0f0; padding: 2px 6px; border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .drop {
+    border: 2px dashed #c5c5c5; border-radius: 12px; padding: 28px 20px;
+    text-align: center; cursor: pointer; transition: .15s;
+    background: #fff; margin-bottom: 12px;
+  }
+  .drop:hover, .drop.hover { border-color: #cb11ab; background: #fdf5fb; }
+  .drop.done { border-color: var(--success); background: #f0fff4; }
+  .drop small { display: block; color: #999; margin-top: 8px; font-size: 12px; }
+  .drop .label {
+    font-size: 13px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    font-weight: 600; margin-bottom: 10px;
+  }
+  .drop .big-icon { font-size: 32px; margin-bottom: 10px; line-height: 1; }
+
+  .settings {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .settings h4 { margin: 0 0 14px; font-size: 14px; color: #444; font-weight: 600; }
+  .settings-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .field input {
+    padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; font-family: inherit;
+  }
+  .field input:focus { outline: none; border-color: #cb11ab; }
+
+  #log {
+    margin-top: 20px; font-size: 13px; color: #555; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+    white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace;
+    max-height: 380px; overflow-y: auto; display: none;
+  }
+  #log.active { display: block; }
+
+  #preview { display: none; margin-top: 20px; }
+  #preview.active { display: block; }
+  table.preview { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.preview th, table.preview td {
+    padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left;
+    white-space: nowrap; overflow: hidden; max-width: 280px; text-overflow: ellipsis;
+  }
+  table.preview th { background: #f5f5f5; font-weight: 600; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.4px; }
+  table.preview tr.no-price { background: #fff8e6; }
+
+  .summary {
+    margin-top: 16px; padding: 14px 18px; background: #f7f9fc;
+    border-radius: 8px; font-size: 14px; line-height: 1.7;
+  }
+  .summary .stat { display: inline-block; margin-right: 20px; }
+  .summary .num { font-weight: 700; color: #cb11ab; }
+
+  .hint { font-size: 12px; color: #888; margin-top: 12px; line-height: 1.55; }
+  .hint code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; }
+
+  details.synonyms {
+    margin-top: 12px; font-size: 12px; color: #666;
+    background: #f9f9f9; padding: 10px 14px; border-radius: 8px;
+  }
+  details.synonyms summary { cursor: pointer; font-weight: 600; color: #444; }
+  details.synonyms ul { margin: 8px 0 0 20px; }
+  details.synonyms li { margin: 3px 0; }
+
+  .marketplace-badge {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    padding: 3px 8px; background: #cb11ab; color: #fff;
+    border-radius: 5px; letter-spacing: 0.5px;
+    vertical-align: middle; margin-left: 8px;
+  }
+
+  /* ============ Инструкция для менеджера ============ */
+  .info-box {
+    background: #f8f5ff;
+    border-left: 4px solid #cb11ab;
+    border-radius: 10px;
+    padding: 0;
+    margin: 24px 0;
+    overflow: hidden;
+  }
+  .info-box > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+  }
+  .info-box > summary::-webkit-details-marker { display: none; }
+  .info-box > summary::after {
+    content: '▾';
+    margin-left: auto;
+    transition: transform 0.2s;
+    color: #cb11ab;
+    font-size: 14px;
+  }
+  .info-box[open] > summary::after { transform: rotate(180deg); }
+  .info-box > summary:hover { background: #f0eaff; }
+
+  .info-body {
+    padding: 4px 20px 20px 20px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #333;
+  }
+  .info-body h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 18px 0 8px;
+  }
+  .info-body h4:first-child { margin-top: 8px; }
+  .info-body p { margin: 6px 0; }
+  .info-body ul, .info-body ol { margin: 8px 0 8px 22px; }
+  .info-body li { margin: 4px 0; }
+  .info-body code {
+    background: #ede4ff;
+    color: #5b128c;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .info-body .arrow-example {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #e6dbf5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 13.5px;
+    flex-wrap: wrap;
+  }
+  .info-body .arrow-example .from,
+  .info-body .arrow-example .to {
+    font-family: ui-monospace, Consolas, monospace;
+    background: #f3eaff;
+    padding: 3px 8px;
+    border-radius: 5px;
+    color: #5b128c;
+    font-weight: 600;
+  }
+  .info-body .arrow-example .arrow {
+    color: #cb11ab;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .info-body .success-line {
+    background: #e8f9ee;
+    border-left: 3px solid #2ecc71;
+    padding: 8px 12px;
+    border-radius: 5px;
+    margin: 6px 0;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12.5px;
+    color: #1e874b;
+  }
+  .info-body .warn-line {
+    background: #fff8e6;
+    border-left: 3px solid #f39c12;
+    padding: 8px 12px;
+    border-radius: 5px;
+    margin: 6px 0;
+    font-size: 13px;
+    color: #8a6d00;
+  }
+  .info-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 13px;
+  }
+  .info-body table th,
+  .info-body table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #e6dbf5;
+    text-align: left;
+    vertical-align: top;
+  }
+  .info-body table th {
+    background: #f3eaff;
+    font-weight: 600;
+    color: #5b128c;
+    font-size: 12.5px;
+  }
+  .info-body table code { font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="../index.html" class="logo">ALBOM<span>MONET</span>.RU</a>
+    <button class="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav">
+      <a href="../pages/sales.html">Продажи</a>
+      <a href="./index.html" class="active">← Все скрипты WB</a>
+      <a href="../pages/delivery.html">Доставка</a>
+      <a href="../pages/other.html">Прочее</a>
+    </nav>
+  </div>
+</header>
+
+<main class="site-main">
+
+  <a href="./wb.html" style="display:inline-block; font-size:13px; color:var(--primary); text-decoration:none; margin-bottom:16px;">← Все скрипты WB</a>
+
+  <h1 class="page-title">📦 Сводка WB: 2 файла → 1 таблица <span class="marketplace-badge">WILDBERRIES</span></h1>
+  <p class="page-lead">
+    Wildberries разделил данные так, что <b>названия — в одном файле, цены — в другом</b>.
+    Загрузите оба файла <b>одного магазина</b>, скрипт соединит их по «Артикул WB»
+    (nmID) и выдаст одну плоскую таблицу: <b>артикул, nmID, название, цена</b>.
+  </p>
+
+  <div class="warn">
+    🔒 Всё считается прямо в браузере. Файлы никуда не отправляются.<br>
+    🛡️ Названия колонок находятся <b>автоматически по синонимам</b> — если WB переименует
+    «Наименование» в «Название» или «Текущая цена» в «Цена», скрипт всё равно сработает.
+  </div>
+
+  <div class="step-title">
+    <span class="num">1</span>
+    Общие характеристики — там, где НАЗВАНИЯ
+  </div>
+  <div class="step-desc">
+    Скачай в личном кабинете WB файл с названиями.
+    Обычно он называется <span class="file-name">Общие характеристики.xlsx</span>
+    или <span class="file-name">Общие характеристики товаров.xlsx</span>.
+    Внутри — артикул продавца, Артикул WB (nmID) и наименование.
+    <b>Цен здесь нет.</b>
+  </div>
+  <div class="drop" id="dropChars">
+    <div class="big-icon">📋</div>
+    <div id="dropCharsText">
+      📁 Перетащите .xlsx или нажмите для выбора
+      <small>Файл «Общие характеристики» для магазина №1</small>
+    </div>
+    <input type="file" id="fileChars" accept=".xls,.xlsx" hidden>
+  </div>
+
+  <div class="step-title">
+    <span class="num">2</span>
+    Шаблон обновления цен — там, где ЦЕНЫ
+  </div>
+  <div class="step-desc">
+    В том же кабинете скачай файл с ценами.
+    Обычно называется <span class="file-name">Обновление цен.xlsx</span>
+    или <span class="file-name">Шаблон обновления цен.xlsx</span>.
+    Внутри — Артикул WB (nmID), артикул продавца и <b>«Текущая цена»</b>.
+    <b>Названий товаров здесь нет.</b>
+  </div>
+  <div class="drop" id="dropPrices">
+    <div class="big-icon">💰</div>
+    <div id="dropPricesText">
+      📁 Перетащите .xlsx или нажмите для выбора
+      <small>Файл «Обновление цен» для магазина №1</small>
+    </div>
+    <input type="file" id="filePrices" accept=".xls,.xlsx" hidden>
+  </div>
+
+  <div class="step-title">
+    <span class="num">3</span>
+    Настройки (можно оставить по умолчанию)
+  </div>
+  <div class="step-desc">
+    Названия колонок находятся <b>автоматически</b> по синонимам.
+    Ниже — только если хочешь вручную переопределить для конкретного случая.
+  </div>
+
+  <details class="info-box">
+    <summary>❓ Что делать, если WB переименовал колонки</summary>
+    <div class="info-body">
+
+      <p>
+        WB любит менять названия колонок в выгрузках. Скрипт это <b>предусмотрел</b>:
+        он ищет нужные данные <b>по списку синонимов</b>, а не по одному точному
+        названию. Тебе в 99 % случаев <b>ничего делать не надо</b>.
+      </p>
+
+      <h4>Пример 1. Было «Наименование» — стало «Название»</h4>
+      <div class="arrow-example">
+        <span class="from">Наименование</span>
+        <span class="arrow">→</span>
+        <span class="to">Название</span>
+        <span style="margin-left:auto;color:#666;">скрипт всё равно найдёт ✅</span>
+      </div>
+      <div class="success-line">
+        ✅ Наименование — колонка D (найдено по «название»)
+      </div>
+
+      <h4>Пример 2. Было «Текущая цена» — стало «Цена»</h4>
+      <div class="arrow-example">
+        <span class="from">Текущая цена</span>
+        <span class="arrow">→</span>
+        <span class="to">Цена</span>
+        <span style="margin-left:auto;color:#666;">скрипт всё равно найдёт ✅</span>
+      </div>
+      <div class="success-line">
+        ✅ Цена (Текущая цена) — колонка I (найдено по «цена»)
+      </div>
+
+      <h4>Пример 3. Было «Артикул WB» — стало «nmID»</h4>
+      <div class="arrow-example">
+        <span class="from">Артикул WB</span>
+        <span class="arrow">→</span>
+        <span class="to">nmID</span>
+        <span style="margin-left:auto;color:#666;">скрипт всё равно найдёт ✅</span>
+      </div>
+      <div class="success-line">
+        ✅ Артикул WB — колонка C (найдено по «nmid»)
+      </div>
+
+      <h4>❌ А если WB придумал что-то совсем новое?</h4>
+      <p>
+        Например, назвал колонку <code>Цена, руб. с НДС</code> — такого синонима
+        в скрипте может не быть. Тогда:
+      </p>
+      <ol>
+        <li>Открой файл WB и посмотри, как <b>точно</b> называется колонка.</li>
+        <li>Впиши это название в соответствующее поле в настройках ниже.</li>
+        <li>Запусти скрипт. Ручное название имеет <b>приоритет</b>.</li>
+      </ol>
+      <div class="warn-line">
+        💡 Если после этого в логе всё равно <b>❌ «не найдена»</b> — напиши нам:
+        добавим новый синоним в скрипт за пару минут.
+      </div>
+
+      <h4>Что скрипт понимает «из коробки»</h4>
+      <table>
+        <thead>
+          <tr><th>Поле</th><th>Синонимы, которые скрипт ищет автоматически</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Наименование</b></td>
+            <td>
+              <code>Наименование</code>, <code>Название</code>,
+              <code>Наименование товара</code>, <code>Название товара</code>,
+              <code>Товар</code>, <code>Наим.</code>
+            </td>
+          </tr>
+          <tr>
+            <td><b>Артикул WB</b></td>
+            <td>
+              <code>Артикул WB</code>, <code>Артикул ВБ</code>,
+              <code>nmID</code>, <code>Номенклатура</code>,
+              <code>WB Артикул</code>, <code>Артикул Wildberries</code>
+            </td>
+          </tr>
+          <tr>
+            <td><b>Артикул продавца</b></td>
+            <td>
+              <code>Артикул продавца</code>, <code>Артикул поставщика</code>,
+              <code>SKU продавца</code>, <code>Seller Article</code>
+            </td>
+          </tr>
+          <tr>
+            <td><b>Цена</b></td>
+            <td>
+              <code>Текущая цена</code>, <code>Цена</code>,
+              <code>Цена, руб.</code>, <code>Цена продажи</code>,
+              <code>Цена реализации</code>, <code>Цена со скидкой</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>🛡️ Как быстро понять, что скрипт всё нашёл</h4>
+      <p>
+        После запуска скрипт <b>в логе</b> показывает по каждой колонке, где она
+        найдена и по какому названию:
+      </p>
+      <div class="success-line">
+        ✅ Артикул WB (nmID) — колонка C (найдено по «артикул wb»)
+      </div>
+      <p>
+        Если все три-четыре строки начинаются с ✅ — <b>всё в порядке</b>, можно
+        скачивать результат. Если хоть одна ❌ — тогда действуй по инструкции выше.
+      </p>
+
+    </div>
+  </details>
+
+  <div class="settings">
+    <h4>Точные названия колонок (опционально)</h4>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Артикул продавца (в файле характеристик)</label>
+        <input type="text" id="charsArticle" placeholder="Артикул продавца">
+      </div>
+      <div class="field">
+        <label>Артикул WB / nmID (в файле характеристик)</label>
+        <input type="text" id="charsNmId" placeholder="Артикул WB">
+      </div>
+      <div class="field">
+        <label>Наименование (в файле характеристик)</label>
+        <input type="text" id="charsName" placeholder="Наименование">
+      </div>
+    </div>
+
+    <h4 style="margin-top:20px;">В файле с ценами</h4>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Артикул WB / nmID</label>
+        <input type="text" id="pricesNmId" placeholder="Артикул WB">
+      </div>
+      <div class="field">
+        <label>Цена</label>
+        <input type="text" id="pricesPrice" placeholder="Текущая цена">
+      </div>
+      <div class="field">
+        <label>Артикул продавца (если есть)</label>
+        <input type="text" id="pricesArticle" placeholder="Артикул продавца">
+      </div>
+    </div>
+
+    <details class="synonyms">
+      <summary>Показать список синонимов, которые ищет скрипт автоматически</summary>
+      <ul>
+        <li><b>Наименование:</b> Наименование · Название · Наименование товара ·
+            Название товара · Товар · Наим.</li>
+        <li><b>Артикул WB:</b> Артикул WB · Артикул ВБ · nmID · Номенклатура ·
+            WB Артикул · Артикул Wildberries</li>
+        <li><b>Артикул продавца:</b> Артикул продавца · Артикул поставщика ·
+            SKU продавца · Seller Article</li>
+        <li><b>Цена:</b> Текущая цена · Цена · Текущая цена, руб. ·
+            Цена, руб. · Цена продажи · Цена со скидкой · Цена реализации</li>
+      </ul>
+    </details>
+
+    <div class="hint" style="margin-top:14px;">
+      💡 Если вписываешь название колонки вручную — попадёшь на точное совпадение,
+      синонимы игнорируются.
+    </div>
+  </div>
+
+  <button id="runBtn" class="btn" disabled style="background:#cb11ab;">▶ Свести 2 файла в 1 таблицу</button>
+
+  <div id="log"></div>
+
+  <div id="preview">
+    <h3 style="margin-bottom:12px;">Предпросмотр (первые 30 строк)</h3>
+    <div style="overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:8px;">
+      <table class="preview" id="previewTable"></table>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div style="margin-top:16px;">
+      <button id="downloadBtn" class="btn" style="background:#cb11ab;">⬇️ Скачать полный результат (xlsx)</button>
+    </div>
+  </div>
+
+    <details class="info-box" style="margin-top:40px;">
+    <summary>📘 Как работает этот скрипт (для любопытных и для отладки)</summary>
+    <div class="info-body">
+
+      <h4>Проблема</h4>
+      <p>
+        Wildberries искусственно разделил данные о товарах на два файла:
+      </p>
+      <ul>
+        <li><b>«Общие характеристики»</b> — есть названия, но нет цен.</li>
+        <li><b>«Обновление цен»</b> — есть цены, но нет названий.</li>
+      </ul>
+      <p>
+        Сравнить цены двух магазинов напрямую по этим файлам <b>невозможно</b> —
+        нужно сначала склеить их в один промежуточный файл.
+      </p>
+
+      <h4>Решение</h4>
+      <ol>
+        <li>Скрипт находит в каждом файле шапку и колонки <b>по названиям</b>.</li>
+        <li>Из «Характеристик» вытаскивает: <code>Артикул продавца</code>,
+            <code>Артикул WB (nmID)</code>, <code>Наименование</code>.</li>
+        <li>Из «Цен» вытаскивает: <code>Артикул WB (nmID)</code>,
+            <code>Текущая цена</code>.</li>
+        <li>Соединяет строки по <b>Артикул WB (nmID)</b>.</li>
+        <li>Выдаёт таблицу: <code>Артикул продавца | Артикул WB | Наименование | Цена</code>.</li>
+      </ol>
+
+      <h4>Что попадёт в отчёт</h4>
+      <table>
+        <thead>
+          <tr><th>Категория</th><th>Что означает</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🟢 <b>С ценой</b></td>
+            <td>Товар есть в обоих файлах, название + цена склеены. Это
+                <b>основа для сравнения с другим магазином</b>.</td>
+          </tr>
+          <tr>
+            <td>🟡 <b>Без цены</b></td>
+            <td>Товар есть в «Характеристиках», но в файле цен его нет.
+                Обычно это товары без активной цены или снятые с продажи.
+                В сводке строка подсвечивается жёлтым.</td>
+          </tr>
+          <tr>
+            <td>⚪ <b>Только в ценах</b></td>
+            <td>Товар есть в файле цен, но нет в «Характеристиках». Возможные
+                причины: nmID удалён из карточек, дубликат, ошибка WB.
+                Такие строки идут в конце сводки, название пустое.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4 style="color:#a12622; margin-top:28px;">⚠️ ВАЖНО — про категорию «Только в ценах»</h4>
+
+      <p>
+        В отчёте может появиться строка <b>«Только в ценах»</b> с ненулевым
+        числом (например, <b>56 позиций</b>). Это значит: <b>в файле цен</b>
+        есть nmID, которых <b>нет в файле характеристик</b>. По ним
+        <b>нет названия товара</b>.
+      </p>
+
+      <h4>Возможные причины</h4>
+      <ol>
+        <li>
+          <b>WB добавил новые карточки</b>, но характеристики ещё не
+          подгрузились в отчёт. Обычно самоисправляется через 1–2 дня —
+          просто скачай характеристики заново.
+        </li>
+        <li>
+          <b>Некоторые nmID в файле цен — дубликаты или мусорные записи.</b>
+          WB иногда оставляет «призраки» удалённых товаров.
+        </li>
+        <li>
+          <b>Часть товаров есть только в WB-кабинете, но не в файле характеристик.</b>
+          Например, ты их завёл, но не заполнил обязательные поля — WB не
+          отдаёт такие карточки в отчёт «Общие характеристики».
+        </li>
+      </ol>
+
+      <h4>Что с ними делать</h4>
+      <ul>
+        <li>
+          <b>Скачай xlsx</b> — эти строки будут <b>в конце файла</b>, в колонке
+          «Наименование» пусто. Отфильтруй <code>Наименование = (пусто)</code> —
+          увидишь все 56 строк сразу.
+        </li>
+        <li>
+          <b>Если это реальные товары</b> — зайди в ЛК WB, дозаполни
+          обязательные характеристики, скачай «Общие характеристики» заново,
+          перезапусти скрипт.
+        </li>
+        <li>
+          <b>Если это мусор</b> (удалённые карточки, старые дубликаты) —
+          ничего не делай. При сравнении с другим магазином WB <b>эти строки
+          не помешают</b>: у них нет названия, значит они не склеятся с товарами
+          второго магазина и просто не попадут в итоговое сравнение.
+        </li>
+      </ul>
+
+      <h4>Как быстро проверить эти 56 строк</h4>
+      <ol>
+        <li>Скачай файл из этого скрипта.</li>
+        <li>Открой в Excel / LibreOffice.</li>
+        <li>Включи автофильтр (он уже включён).</li>
+        <li>В колонке «Наименование» поставь фильтр <b>(Пустые)</b>.</li>
+        <li>Посмотри на колонку «Артикул WB (nmID)» — увидишь эти 56 nmID.</li>
+        <li>
+          Скопируй их и поищи в ЛК WB. Если найдёшь товар — дозаполни
+          характеристики. Если нет — это мусор, игнорируй.
+        </li>
+      </ol>
+
+      <h4>Что делать с результатом</h4>
+      <ul>
+        <li>Скачай файл, открой, автофильтр уже включён.</li>
+        <li>Отфильтруй «без цены» (жёлтые) — проверь, должны ли они продаваться.</li>
+        <li>Отфильтруй «только в ценах» — реши: дозаполнить или игнорировать.</li>
+        <li>Эта сводка — вход для скрипта «Сравнение двух магазинов WB».</li>
+      </ul>
+
+      <h4>Технические детали</h4>
+      <ul>
+        <li>Шапка ищется в первых 10 строках каждого листа.</li>
+        <li>Скрипт пробует все листы и выбирает тот, где больше совпадений.</li>
+        <li>Нормализация заголовков: нижний регистр, <code>ё→е</code>,
+            удаление пунктуации.</li>
+        <li>Дубликаты nmID отбрасываются: в сводке одна строка на один
+            уникальный nmID.</li>
+      </ul>
+
+    </div>
+  </details>
+
+</main>
+
+<footer class="site-footer">
+  Дружеский жест от <strong>Платонова А. В.</strong>
+</footer>
+
+<script src="./xlsx.full.min.js"></script>
+<script src="../script.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+
+  let wbChars = null, wbPrices = null;
+  let fileCharsName = '', filePricesName = '';
+  let resultRows = [];
+
+  // ----- СИНОНИМЫ -----
+  // Ключи должны совпадать с ключами, которые передаются в pickBestSheet
+  const SYNONYMS = {
+    // Файл «Общие характеристики»
+    charsArticle: [
+      'артикул продавца',
+      'артикул поставщика',
+      'sku продавца',
+      'артикул (продавца)',
+      'seller article',
+      'артикул продавца (sku)',
+    ],
+    charsNmId: [
+      'артикул wb',
+      'артикул вб',
+      'nmid',
+      'номенклатура',
+      'wb артикул',
+      'артикул wildberries',
+      'wildberries артикул',
+    ],
+    charsName: [
+      'наименование',
+      'название',
+      'наименование товара',
+      'название товара',
+      'товар',
+      'наим.',
+      'наим',
+    ],
+    // Файл «Обновление цен»
+    pricesNmId: [
+      'артикул wb',
+      'артикул вб',
+      'nmid',
+      'номенклатура',
+      'wb артикул',
+      'артикул wildberries',
+    ],
+    pricesPrice: [
+      'текущая цена',
+      'текущая цена, руб.',
+      'текущая цена руб',
+      'цена',
+      'цена, руб.',
+      'цена руб',
+      'цена продажи',
+      'цена реализации',
+      'цена со скидкой',
+    ],
+    pricesArticle: [
+      'артикул продавца',
+      'артикул поставщика',
+      'sku продавца',
+      'артикул (продавца)',
+    ],
+  };
+
+  function log(msg, clear) {
+    if (clear) logEl.textContent = '';
+    logEl.textContent += msg + '\n';
+    logEl.classList.add('active');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function normHeader(s) {
+    return String(s == null ? '' : s)
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[\s\u00a0]+/g, ' ')
+      .replace(/[.,;:!?()[\]{}«»"'`]/g, '')
+      .trim();
+  }
+
+  function toStr(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return v.trim();
+    return String(v).trim();
+  }
+
+  // ============================================================
+  //  ГЛАВНОЕ ИСПРАВЛЕНИЕ:
+  //  теперь key — это ПОЛНОЕ имя ключа в SYNONYMS,
+  //  и synonyms гарантированно массив.
+  // ============================================================
+  function findColBySynonyms(headerRow, synonyms) {
+    if (!Array.isArray(synonyms)) return { idx: -1, matchedBy: null };
+    const norm = headerRow.map(normHeader);
+    for (const syn of synonyms) {
+      const target = normHeader(syn);
+      let idx = norm.findIndex(h => h === target);
+      if (idx !== -1) return { idx, matchedBy: syn };
+      idx = norm.findIndex(h => h.includes(target));
+      if (idx !== -1) return { idx, matchedBy: syn };
+      if (target.length > 4) {
+        idx = norm.findIndex(h => h.length > 4 && target.includes(h));
+        if (idx !== -1) return { idx, matchedBy: syn };
+      }
+    }
+    return { idx: -1, matchedBy: null };
+  }
+
+  //  wantedKeys — массив ПОЛНЫХ имён ключей в SYNONYMS,
+  //  например: ['charsArticle', 'charsNmId', 'charsName']
+  //  forceSynonyms — карта { charsArticle: 'своё название', ... }
+  function findHeaderAndCols(data, wantedKeys, forceSynonyms) {
+    let best = { rowIdx: -1, cols: null, score: -1 };
+
+    for (let r = 0; r < Math.min(10, data.length); r++) {
+      const row = data[r] || [];
+      const cols = {};
+      let score = 0;
+
+      for (const key of wantedKeys) {
+        const manual = forceSynonyms[key] || '';
+        const baseSynonyms = SYNONYMS[key] || [];
+        const synonyms = manual
+          ? [manual, ...baseSynonyms]
+          : baseSynonyms;
+
+        const { idx, matchedBy } = findColBySynonyms(row, synonyms);
+        cols[key] = { idx, matchedBy };
+        if (idx !== -1) score++;
+      }
+
+      if (score > best.score) best = { rowIdx: r, cols, score };
+    }
+    return best;
+  }
+
+  function findDataStart(data, headerRowIdx, cols) {
+    // приоритет по nmId
+    const nmKey = cols.charsNmId || cols.pricesNmId;
+    const nameKey = cols.charsName;
+    const keyIdx = (nmKey && nmKey.idx !== -1)
+      ? nmKey.idx
+      : (nameKey && nameKey.idx !== -1 ? nameKey.idx : 0);
+
+    for (let r = headerRowIdx + 1; r < data.length; r++) {
+      const row = data[r] || [];
+      const v = toStr(row[keyIdx]);
+      if (!v) continue;
+      const nv = normHeader(v);
+      if (nv === 'артикул wb') continue;
+      if (nv === 'nmid') continue;
+      if (nv === 'наименование') continue;
+      if (nv === 'название') continue;
+      return r;
+    }
+    return headerRowIdx + 1;
+  }
+
+  function wireDrop(dropId, inputId, cb) {
+    const drop = $(dropId), input = $(inputId);
+    drop.onclick = () => input.click();
+    input.onchange = e => { if (e.target.files[0]) readFile(e.target.files[0], cb); };
+    ['dragover','dragleave','drop'].forEach(ev => {
+      drop.addEventListener(ev, e => {
+        e.preventDefault();
+        if (ev === 'dragover') drop.classList.add('hover');
+        if (ev === 'dragleave') drop.classList.remove('hover');
+        if (ev === 'drop') {
+          drop.classList.remove('hover');
+          if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0], cb);
+        }
+      });
+    });
+  }
+
+  function readFile(file, cb) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        cb(wb, file.name);
+      } catch (err) {
+        log('❌ Ошибка чтения: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  wireDrop('dropChars', 'fileChars', (wb, name) => {
+    wbChars = wb; fileCharsName = name;
+    $('dropChars').classList.add('done');
+    $('dropCharsText').innerHTML = '✅ <b>' + name + '</b><br><small>Листы: ' +
+      wb.SheetNames.join(', ') + '</small>';
+    log('📋 Шаг 1: Файл «Общие характеристики» — ' + name, true);
+    log('  Листы: ' + wb.SheetNames.join(', '));
+    updateBtn();
+  });
+
+  wireDrop('dropPrices', 'filePrices', (wb, name) => {
+    wbPrices = wb; filePricesName = name;
+    $('dropPrices').classList.add('done');
+    $('dropPricesText').innerHTML = '✅ <b>' + name + '</b><br><small>Листы: ' +
+      wb.SheetNames.join(', ') + '</small>';
+    log('💰 Шаг 2: Файл с ценами — ' + name);
+    log('  Листы: ' + wb.SheetNames.join(', '));
+    updateBtn();
+  });
+
+  function updateBtn() {
+    $('runBtn').disabled = !(wbChars && wbPrices);
+  }
+
+  // wantedKeys — полные имена ключей
+  function pickBestSheet(wb, wantedKeys, forceSynonyms) {
+    let best = null;
+    for (const sheetName of wb.SheetNames) {
+      const sheet = wb.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+      const found = findHeaderAndCols(data, wantedKeys, forceSynonyms);
+      if (!best || found.score > best.score) {
+        best = {
+          sheet: sheetName,
+          rowIdx: found.rowIdx,
+          cols: found.cols,
+          score: found.score,
+          data,
+        };
+      }
+    }
+    return best;
+  }
+
+  function logFound(sheetName, headerRowIdx, cols, keyLabels) {
+    log('');
+    log('  → лист «' + sheetName + '», шапка в строке ' + (headerRowIdx + 1));
+    for (const key of Object.keys(keyLabels)) {
+      const c = cols[key];
+      if (!c || c.idx === -1) {
+        log('    ❌ ' + keyLabels[key] + ' — не найдена');
+      } else {
+        let letter = '';
+        let n = c.idx;
+        while (n >= 0) {
+          letter = String.fromCharCode((n % 26) + 65) + letter;
+          n = Math.floor(n / 26) - 1;
+        }
+        log('    ✅ ' + keyLabels[key] + ' — колонка ' + letter +
+            ' (найдено по «' + c.matchedBy + '»)');
+      }
+    }
+  }
+
+  $('runBtn').onclick = () => {
+    if (!wbChars || !wbPrices) return;
+
+    log('', true);
+    log('=== Сводка WB ===');
+
+    const forceChars = {
+      charsArticle: $('charsArticle').value.trim(),
+      charsNmId:    $('charsNmId').value.trim(),
+      charsName:    $('charsName').value.trim(),
+    };
+    const forcePrices = {
+      pricesNmId:    $('pricesNmId').value.trim(),
+      pricesPrice:   $('pricesPrice').value.trim(),
+      pricesArticle: $('pricesArticle').value.trim(),
+    };
+
+    log('');
+    log('📋 Файл «Общие характеристики»');
+    const chars = pickBestSheet(
+      wbChars,
+      ['charsArticle', 'charsNmId', 'charsName'],
+      forceChars
+    );
+    logFound(chars.sheet, chars.rowIdx, chars.cols, {
+      charsArticle: 'Артикул продавца',
+      charsNmId:    'Артикул WB (nmID)',
+      charsName:    'Наименование',
+    });
+
+    if (!chars.cols.charsNmId || chars.cols.charsNmId.idx === -1) {
+      log('❌ Не найден «Артикул WB» — без него не склеить. Прерываю.');
+      return;
+    }
+    if (!chars.cols.charsName || chars.cols.charsName.idx === -1) {
+      log('❌ Не найден «Наименование» — без него нет смысла. Прерываю.');
+      return;
+    }
+
+    log('');
+    log('💰 Файл «Обновление цен»');
+    const prices = pickBestSheet(
+      wbPrices,
+      ['pricesNmId', 'pricesPrice', 'pricesArticle'],
+      forcePrices
+    );
+    logFound(prices.sheet, prices.rowIdx, prices.cols, {
+      pricesNmId:    'Артикул WB (nmID)',
+      pricesPrice:   'Цена (Текущая цена)',
+      pricesArticle: 'Артикул продавца',
+    });
+
+    if (!prices.cols.pricesNmId || prices.cols.pricesNmId.idx === -1) {
+      log('❌ Не найден «Артикул WB» в файле цен. Прерываю.');
+      return;
+    }
+    if (!prices.cols.pricesPrice || prices.cols.pricesPrice.idx === -1) {
+      log('❌ Не найдена «Текущая цена» в файле цен. Прерываю.');
+      return;
+    }
+
+    const charsStart = findDataStart(chars.data, chars.rowIdx, chars.cols);
+    log('');
+    log('Данные в «Характеристиках» начинаются со строки ' + (charsStart + 1));
+
+    const charsMap = new Map();
+    const charsOrder = [];
+    for (let i = charsStart; i < chars.data.length; i++) {
+      const row = chars.data[i] || [];
+      const nmId = toStr(row[chars.cols.charsNmId.idx]);
+      const name = toStr(row[chars.cols.charsName.idx]);
+      if (!nmId || !name) continue;
+      const nv = normHeader(name);
+      if (nv === 'наименование' || nv === 'название') continue;
+      if (charsMap.has(nmId)) continue;
+      const article = chars.cols.charsArticle && chars.cols.charsArticle.idx !== -1
+        ? toStr(row[chars.cols.charsArticle.idx])
+        : '';
+      charsMap.set(nmId, { article, name });
+      charsOrder.push(nmId);
+    }
+    log('  Уникальных товаров: ' + charsMap.size);
+
+    const pricesStart = findDataStart(prices.data, prices.rowIdx, prices.cols);
+    log('Данные в «Ценах» начинаются со строки ' + (pricesStart + 1));
+
+    const pricesMap = new Map();
+    for (let i = pricesStart; i < prices.data.length; i++) {
+      const row = prices.data[i] || [];
+      const nmId = toStr(row[prices.cols.pricesNmId.idx]);
+      if (!nmId) continue;
+      if (pricesMap.has(nmId)) continue;
+      const price = toStr(row[prices.cols.pricesPrice.idx]);
+      const article = prices.cols.pricesArticle && prices.cols.pricesArticle.idx !== -1
+        ? toStr(row[prices.cols.pricesArticle.idx])
+        : '';
+      pricesMap.set(nmId, { price, article });
+    }
+    log('  Уникальных товаров: ' + pricesMap.size);
+
+    resultRows = [['Артикул продавца', 'Артикул WB (nmID)', 'Наименование', 'Цена']];
+
+    let withPrice = 0;
+    let withoutPrice = 0;
+
+    for (const nmId of charsOrder) {
+      const ch = charsMap.get(nmId);
+      const pr = pricesMap.get(nmId);
+      const price = pr ? pr.price : '';
+      const article = ch.article || (pr ? pr.article : '');
+      resultRows.push([article, nmId, ch.name, price]);
+      if (price) withPrice++;
+      else withoutPrice++;
+    }
+
+    let onlyInPrices = 0;
+    const charsSet = new Set(charsOrder);
+    for (const [nmId, pr] of pricesMap) {
+      if (charsSet.has(nmId)) continue;
+      resultRows.push([pr.article, nmId, '', pr.price]);
+      onlyInPrices++;
+    }
+
+    log('');
+    log('=== ИТОГО ===');
+    log('  Всего позиций в сводке: ' + (resultRows.length - 1));
+    log('  С ценой: ' + withPrice);
+    log('  Без цены (есть в характеристиках, нет в ценах): ' + withoutPrice);
+    log('  Только в ценах (нет названия в характеристиках): ' + onlyInPrices);
+
+    renderPreview(resultRows);
+    renderSummary(resultRows.length - 1, withPrice, withoutPrice, onlyInPrices);
+
+    $('preview').classList.add('active');
+    log('');
+    log('✅ Готово. Нажмите «Скачать полный результат».');
+  };
+
+  function renderPreview(rows) {
+    const table = $('previewTable');
+    const head = rows[0];
+    const body = rows.slice(1, 31);
+
+    let html = '<thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') +
+      '</tr></thead><tbody>';
+    for (const r of body) {
+      const noPrice = !r[3];
+      const cls = noPrice ? 'no-price' : '';
+      html += '<tr class="' + cls + '">' +
+        r.map(v => '<td title="' + String(v).replace(/"/g, '&quot;') + '">' +
+          String(v) + '</td>').join('') +
+        '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  function renderSummary(total, withPrice, withoutPrice, onlyInPrices) {
+    $('summary').innerHTML =
+      '<span class="stat">Всего позиций: <span class="num">' + total + '</span></span>' +
+      '<span class="stat">С ценой: <span class="num">' + withPrice + '</span></span>' +
+      '<span class="stat">Без цены: <span class="num">' + withoutPrice + '</span></span>' +
+      '<span class="stat">Только в ценах: <span class="num">' + onlyInPrices + '</span></span>';
+  }
+
+  $('downloadBtn').onclick = () => {
+    if (!resultRows.length) return;
+    const ws = XLSX.utils.aoa_to_sheet(resultRows);
+    ws['!cols'] = [
+      {wch:24},{wch:18},{wch:60},{wch:14},
+    ];
+    ws['!autofilter'] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: resultRows.length - 1, c: 3 }
+      })
+    };
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Сводка');
+
+    const outName = 'сводка_WB_' +
+      (fileCharsName || 'chars').replace(/\.(xlsx?|xls)$/i, '').slice(0, 40) +
+      '.xlsx';
+
+    XLSX.writeFile(wb, outName);
+    log('✅ Скачан: ' + outName);
+  };
+
+})();
+</script>
+</body>
+</html>
