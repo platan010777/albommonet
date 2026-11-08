@@ -185,7 +185,7 @@
   <h1 class="page-title">🧾 Обработка CSV магазина <span class="marketplace-badge">ALBOMMONET</span></h1>
   <p class="page-lead">
     Убирает дубликаты и мусорные строки из CSV-выгрузки магазина,
-    оставляет 5 нужных колонок в правильном порядке. Файл готов
+    оставляет 6 нужных колонок в правильном порядке. Файл готов
     к дальнейшему сравнению с маркетплейсами.
   </p>
 
@@ -201,13 +201,13 @@
     <ol>
       <li>Читает CSV магазина (UTF-8, разделитель <code>;</code>).</li>
       <li>Находит колонки по названиям: <b>Наименование</b>,
-        <b>Код артикула</b>, <b>ID артикула</b>, <b>Зачеркнутая цена</b>,
-        <b>ID товара</b>.</li>
+        <b>Код артикула</b>, <b>ID артикула</b>, <b>Цена</b>,
+        <b>Зачеркнутая цена</b>, <b>ID товара</b>.</li>
       <li>Удаляет строки с <b>пустым «ID артикула»</b> — это дубликаты
         и мусор от недоделок движка сайта (включая строку
         <code>category;АКЦИЯ</code>).</li>
       <li>Собирает результат в порядке:
-        <b>ID артикула → ID товара → Наименование → Код артикула → Зачеркнутая цена</b>.</li>
+        <b>ID артикула → ID товара → Наименование → Код артикула → Цена → Зачеркнутая цена</b>.</li>
       <li>Отдаёт xlsx и csv для дальнейшей работы.</li>
     </ol>
   </div>
@@ -256,6 +256,10 @@
       <div class="field">
         <label>ID артикула (КОНСТАНТА)</label>
         <input type="text" id="colIdArt" placeholder="ID артикула">
+      </div>
+      <div class="field">
+        <label>Цена (текущая)</label>
+        <input type="text" id="colPriceCurrent" placeholder="Цена">
       </div>
       <div class="field">
         <label>Зачеркнутая цена</label>
@@ -317,9 +321,15 @@
             <td><code>ID артикула</code>, <code>ID статьи</code></td>
           </tr>
           <tr>
+            <td><b>Цена (текущая)</b></td>
+            <td><code>Цена</code>, <code>Цена продажи</code>,
+              <code>Цена руб</code>, <code>Цена, руб</code></td>
+          </tr>
+          <tr>
             <td><b>Зачеркнутая цена</b></td>
             <td><code>Зачеркнутая цена</code>, <code>Зачёркнутая цена</code>,
-              <code>Цена</code>, <code>Цена со скидкой</code></td>
+              <code>Старая цена</code>, <code>Цена до скидки</code>,
+              <code>Цена без скидки</code></td>
           </tr>
           <tr>
             <td><b>ID товара</b></td>
@@ -385,7 +395,7 @@
   <details class="info-box">
     <summary>📊 Что получаем на выходе</summary>
     <div class="info-body">
-      <p>Итоговая таблица — <b>5 колонок в фиксированном порядке</b>:</p>
+      <p>Итоговая таблица — <b>6 колонок в фиксированном порядке</b>:</p>
       <table>
         <thead>
           <tr><th>№</th><th>Колонка</th><th>Зачем</th></tr>
@@ -413,8 +423,13 @@
           </tr>
           <tr>
             <td>5</td>
+            <td><b>Цена (текущая)</b></td>
+            <td>Текущая цена для сравнения</td>
+          </tr>
+          <tr>
+            <td>6</td>
             <td><b>Зачеркнутая цена</b></td>
-            <td>Цена для сравнения</td>
+            <td>Старая цена для сравнения</td>
           </tr>
         </tbody>
       </table>
@@ -467,6 +482,9 @@
     price: [
       'зачеркнутая цена', 'зачёркнутая цена', 'старая цена',
       'цена до скидки', 'цена без скидки',
+    ],
+    priceCurrent: [
+      'цена', 'цена продажи', 'цена руб', 'цена, руб',
     ],
     idTov: [
       'id товара', 'id продукта', 'ид товара',
@@ -636,6 +654,7 @@
       code:   $('colCode').value.trim(),
       idArt:  $('colIdArt').value.trim(),
       price:  $('colPrice').value.trim(),
+      priceCurrent: $('colPriceCurrent').value.trim(),
       idTov:  $('colIdTov').value.trim(),
     };
     const cols = findCols(headerRow, force);
@@ -647,6 +666,7 @@
       code:  'Код артикула',
       idArt: 'ID артикула',
       price: 'Зачеркнутая цена',
+      priceCurrent: 'Цена (текущая)',
       idTov: 'ID товара',
     };
     let missing = 0;
@@ -669,7 +689,7 @@
 
     // ==== идём по строкам начиная со второй ====
     const outData = [
-      ['ID артикула', 'ID товара', 'Наименование', 'Код артикула', 'Зачеркнутая цена'],
+      ['ID артикула', 'ID товара', 'Наименование', 'Код артикула', 'Цена', 'Зачеркнутая цена'],
     ];
 
     let totalRows = rows.length - 1;
@@ -690,8 +710,9 @@
       const name  = toStr(row[cols.name.idx]);
       const code  = toStr(row[cols.code.idx]);
       const price = toStr(row[cols.price.idx]);
+      const priceCurrent = toStr(row[cols.priceCurrent.idx]);
 
-      outData.push([idArt, idTov, name, code, price]);
+      outData.push([idArt, idTov, name, code, priceCurrent, price]);
       added++;
     }
 
@@ -743,12 +764,13 @@
       {wch:14},   // ID товара
       {wch:70},   // Наименование
       {wch:22},   // Код артикула
+      {wch:14},   // Цена (текущая)
       {wch:18},   // Зачеркнутая цена
     ];
     ws['!autofilter'] = {
       ref: XLSX.utils.encode_range({
         s: { r: 0, c: 0 },
-        e: { r: resultRows.length - 1, c: 4 }
+        e: { r: resultRows.length - 1, c: 5 }
       })
     };
     const wb = XLSX.utils.book_new();
